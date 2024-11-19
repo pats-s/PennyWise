@@ -21,7 +21,7 @@ data class User(
     @ColumnInfo(name = "lastname") val lastname: String?,
     @ColumnInfo(name = "email") val email: String,
     @ColumnInfo(name = "password") val password: String,
-    @ColumnInfo(name = "dob") val dateOfBirth: Date,
+    @ColumnInfo(name = "dob") val dateOfBirth: Long,
     @ColumnInfo(name = "profilePicture") val profilePicture: String? = null,
     @ColumnInfo(name = "walletId") val walletId: Int // Foreign key referencing Wallet.walletId
 )
