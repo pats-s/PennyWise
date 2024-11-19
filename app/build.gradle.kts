@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.pennywise"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.pennywise"
@@ -51,7 +51,6 @@ dependencies {
 
    /* implementation(libs.androidx.room.runtime)
     implementation(libs.converter.gson.v290)
-    implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.lifecycle.livedata.ktx)*/
 
@@ -59,5 +58,7 @@ dependencies {
     implementation (libs.androidx.room.runtime)
     annotationProcessor (libs.androidx.room.compiler)
     kapt ("androidx.room:room-compiler:2.6.1")
+    implementation(libs.androidx.room.ktx)
+
 
 }
