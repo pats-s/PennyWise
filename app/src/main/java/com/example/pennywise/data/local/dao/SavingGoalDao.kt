@@ -1,4 +1,4 @@
-package com.example.pennywise.local
+package com.example.pennywise.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete

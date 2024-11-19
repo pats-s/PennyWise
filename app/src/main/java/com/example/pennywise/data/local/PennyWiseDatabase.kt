@@ -1,10 +1,15 @@
-package com.example.pennywise.local
+package com.example.pennywise.data.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.pennywise.data.local.dao.CategoryDao
+import com.example.pennywise.data.local.dao.SavingGoalDao
+import com.example.pennywise.data.local.dao.TransactionDao
+import com.example.pennywise.data.local.dao.UserDao
+import com.example.pennywise.data.local.dao.WalletDao
 import com.example.pennywise.data.model.Transaction
 import com.example.pennywise.data.model.User
 import com.example.pennywise.data.model.Wallet
