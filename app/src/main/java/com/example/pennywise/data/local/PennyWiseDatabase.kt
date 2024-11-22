@@ -1,5 +1,6 @@
 package com.example.pennywise.data.local
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
@@ -15,6 +16,7 @@ import com.example.pennywise.data.model.User
 import com.example.pennywise.data.model.Wallet
 import com.example.pennywise.data.model.SavingGoal
 import com.example.pennywise.data.model.Category
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -30,10 +32,11 @@ abstract class PennyWiseDatabase : RoomDatabase() {
     abstract fun savingGoalDao(): SavingGoalDao
     abstract fun categoryDao(): CategoryDao
 
+    @SuppressLint("StaticFieldLeak")
     companion object {
         @Volatile
         private var INSTANCE: PennyWiseDatabase? = null
-
+        private lateinit var firebaseFirestore: FirebaseFirestore
         fun getDatabase(context: Context): PennyWiseDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -43,11 +46,15 @@ abstract class PennyWiseDatabase : RoomDatabase() {
                 )
                     .addCallback(DatabaseCallback()) // Add the callback
                     .build()
+
+                firebaseFirestore = FirebaseFirestore.getInstance()
                 INSTANCE = instance
                 instance
             }
         }
-
+        fun getFirestore(): FirebaseFirestore {
+            return firebaseFirestore
+        }
         private class DatabaseCallback : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)

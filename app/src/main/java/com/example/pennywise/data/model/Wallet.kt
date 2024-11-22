@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "wallets")
 data class Wallet(
     @PrimaryKey(autoGenerate = true) val walletId: Int = 0,
-    @ColumnInfo(name = "balance") val balance : Double = 0.0
+    @ColumnInfo(name = "balance") val balance : Double = 0.0,
+    @ColumnInfo(name = "last_modified") val lastModified: Long = System.currentTimeMillis()
 )

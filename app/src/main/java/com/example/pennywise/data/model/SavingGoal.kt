@@ -31,5 +31,6 @@ data class SavingGoal(
     @ColumnInfo(name = "categoryId") val categoryId: Int?, // The category to avoid spending in
     @ColumnInfo(name = "streakStartDate") val streakStartDate: Long?, // Timestamp for the streak start
     @ColumnInfo(name = "currentStreakDays") val currentStreakDays: Int = 0, // Number of days in the current streak
-    @ColumnInfo(name = "longestStreakDays") val longestStreakDays: Int = 0 // User's longest streak
+    @ColumnInfo(name = "longestStreakDays") val longestStreakDays: Int = 0, // User's longest streak
+    @ColumnInfo(name = "last_modified") val lastModified: Long = System.currentTimeMillis()
 )

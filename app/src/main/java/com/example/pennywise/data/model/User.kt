@@ -23,5 +23,6 @@ data class User(
     @ColumnInfo(name = "password") val password: String,
     @ColumnInfo(name = "dob") val dateOfBirth: Long,
     @ColumnInfo(name = "profilePicture") val profilePicture: String? = null,
-    @ColumnInfo(name = "walletId") val walletId: Int // Foreign key referencing Wallet.walletId
+    @ColumnInfo(name = "walletId") val walletId: Int, // Foreign key referencing Wallet.walletId
+    @ColumnInfo(name = "last_modified") val lastModified: Long = System.currentTimeMillis()
 )
