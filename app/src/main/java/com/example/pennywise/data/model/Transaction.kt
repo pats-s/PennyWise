@@ -27,5 +27,6 @@ data class Transaction(
     @ColumnInfo(name = "type") val type: String, // Income or Expense
     @ColumnInfo(name = "amount") val amount: Double,
     @ColumnInfo(name = "categoryId") val categoryId: Int,
-    @ColumnInfo(name = "date") val date: Long // Use timestamp for dates
+    @ColumnInfo(name = "date") val date: Long, // Use timestamp for dates
+    @ColumnInfo(name = "last_modified") val lastModified: Long = System.currentTimeMillis()
 )

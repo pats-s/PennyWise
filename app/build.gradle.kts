@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.gms.google-services")
     kotlin("kapt")
 }
 
@@ -49,9 +50,9 @@ dependencies {
 
 
 
-   /* implementation(libs.androidx.room.runtime)
+   /*
     implementation(libs.converter.gson.v290)
-    kapt(libs.androidx.room.compiler)
+
     implementation(libs.androidx.lifecycle.livedata.ktx)*/
 
 
@@ -59,6 +60,11 @@ dependencies {
     annotationProcessor (libs.androidx.room.compiler)
     kapt ("androidx.room:room-compiler:2.6.1")
     implementation(libs.androidx.room.ktx)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth) // If using Firebase Authentication
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+
 
 
 }

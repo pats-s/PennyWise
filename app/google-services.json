@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "317564894848",
+    "project_id": "pennywise-3f766",
+    "storage_bucket": "pennywise-3f766.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317564894848:android:8401ed8ccea3eb2529f065",
+        "android_client_info": {
+          "package_name": "com.example.pennywise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVDIJvSe1iXPP0f23hJ3qZyfGxmRQrnv8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

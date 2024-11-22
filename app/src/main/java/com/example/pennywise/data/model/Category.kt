@@ -8,5 +8,6 @@ import androidx.room.PrimaryKey
 data class Category(
     @PrimaryKey(autoGenerate = true) val categoryId: Int = 0,
     @ColumnInfo(name = "name") val name: String, // E.g., "Groceries", "Salary"
-    @ColumnInfo(name = "type") val type: String // Either "Income" or "Expense"
+    @ColumnInfo(name = "type") val type: String, // Either "Income" or "Expense"
+    @ColumnInfo(name = "last_modified") val lastModified: Long = System.currentTimeMillis()
 )
