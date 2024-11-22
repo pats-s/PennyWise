@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.firebase.auth) // If using Firebase Authentication
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.androidx.work.runtime.ktx)
 
 
 
