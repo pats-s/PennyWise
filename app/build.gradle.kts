@@ -35,6 +35,10 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    viewBinding {
+        enable = true
+    }
 }
 
 dependencies {
@@ -44,6 +48,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -55,17 +61,25 @@ dependencies {
 
     implementation(libs.androidx.lifecycle.livedata.ktx)*/
 
-
+    kapt ("androidx.room:room-compiler:2.6.1")
     implementation (libs.androidx.room.runtime)
     annotationProcessor (libs.androidx.room.compiler)
-    kapt ("androidx.room:room-compiler:2.6.1")
     implementation(libs.androidx.room.ktx)
+
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth) // If using Firebase Authentication
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
-    implementation(libs.androidx.work.runtime.ktx)
 
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.navigation.fragment.ktx.v273)
+    implementation(libs.androidx.navigation.ui.ktx.v273)
+
+    implementation(libs.material.v190)
+    implementation(libs.retrofit)
+    implementation(libs.converter.moshi)
+
+    implementation(libs.androidx.lifecycle.livedata.ktx)
 
 
 }
