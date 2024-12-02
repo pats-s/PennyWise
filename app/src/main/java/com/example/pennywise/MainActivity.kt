@@ -1,14 +1,13 @@
 package com.example.pennywise
 
-import SyncWorker
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.NavigationUI
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,32 +15,17 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
 
-        // Example dynamic walletId (fetch this from your user/session data)
-        val dynamicWalletId = 123 // Replace with actual walletId of the logged-in user
-
-        // Schedule the SyncWorker
-        scheduleSyncWorker(dynamicWalletId)
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        NavigationUI.setupWithNavController(bottomNavigationView, navController)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-    }
-
-    private fun scheduleSyncWorker(walletId: Int) {
-        // Create input data with dynamic walletId
-        val inputData = Data.Builder()
-            .putInt("walletId", walletId)
-            .build()
-
-        // Create a one-time work request for SyncWorker
-        val workRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setInputData(inputData)
-            .build()
-
-        // Enqueue the work using WorkManager
-        WorkManager.getInstance(this).enqueue(workRequest)
     }
 }
