@@ -8,6 +8,7 @@ import com.example.pennywise.local.predefinedCategories
 import com.example.pennywise.remote.Category
 import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.remote.Transaction
+import com.example.pennywise.remote.User
 import com.example.pennywise.remote.Wallet
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -37,6 +38,25 @@ class PennyWiseRepository private constructor(context: Context) {
     suspend fun getSettings(): AppSettingsEntity? {
         return appSettingsDao.getSettings()
     }
+
+    fun getUserData(userId: String, onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit) {
+        firestore.collection("users").document(userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val user = snapshot.toObject(User::class.java)
+                if (user != null) {
+                   onSuccess(user)
+                } else {
+                    onFailure(Exception("User not found"))
+                }
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
+
+
 
     fun uploadPredefinedCategories(
         onSuccess: () -> Unit,

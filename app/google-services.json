@@ -12,7 +12,12 @@
           "package_name": "com.example.pennywise"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "317564894848-f614lc3mkk9of5ce4rmiur13iqe45ti2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAVDIJvSe1iXPP0f23hJ3qZyfGxmRQrnv8"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "317564894848-f614lc3mkk9of5ce4rmiur13iqe45ti2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
