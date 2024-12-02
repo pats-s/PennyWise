@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">PennyWise</string>
+    <string name="register_link">Don\'t have an account? Register now</string>
+
 </resources>

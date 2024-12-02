@@ -24,6 +24,8 @@ import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.ui.adapter.TransactionAdapter
 import com.example.pennywise.ui.viewmodel.HomePageViewModel
 import com.example.pennywise.ui.viewmodel.HomePageViewModelFactory
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -58,6 +60,8 @@ class HomeFragment : Fragment() {
         setupRecyclerView()
 
         // Observe LiveData for welcome message, wallet balance, and transactions
+        fetchAndSetWelcomeMessage()
+
         observeViewModel()
 
         // Add click listener for Add Transaction button
@@ -91,6 +95,33 @@ class HomeFragment : Fragment() {
         }
 
     }
+    private fun fetchAndSetWelcomeMessage() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            val userId = currentUser.uid
+            val firestore = FirebaseFirestore.getInstance()
+
+            firestore.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    if (snapshot.exists()) {
+                        val firstName = snapshot.getString("firstname") ?: "User"
+                        binding.tvWelcome.text = "Welcome Back, $firstName!"
+                    } else {
+                        binding.tvWelcome.text = "Welcome!"
+                        Toast.makeText(requireContext(), "User not found in database.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    binding.tvWelcome.text = "Welcome!"
+                    Toast.makeText(requireContext(), "Failed to fetch user data: ${exception.message}", Toast.LENGTH_SHORT).show()
+                }
+        } else {
+            binding.tvWelcome.text = "Welcome!"
+            Toast.makeText(requireContext(), "No user is logged in.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     private fun setupRecyclerView() {
         transactionAdapter = TransactionAdapter(emptyList(), emptyMap())
@@ -107,9 +138,17 @@ class HomeFragment : Fragment() {
             transactionAdapter.updateTransactions(transactions, categoriesMap)
         }
 
-        homePageViewModel.userName.observe(viewLifecycleOwner) { name ->
-            binding.tvWelcome.text = "Welcome Back, $name!"
-        }
+//        homePageViewModel.userName.observe(viewLifecycleOwner) { name ->
+//            binding.tvWelcome.text = "Welcome Back, $name!"
+//        }
+
+//        homePageViewModel.userName.observe(viewLifecycleOwner) { name ->
+//            if (!name.isNullOrEmpty()) {
+//                binding.tvWelcome.text = "Welcome Back, $name!"
+//            } else {
+//                binding.tvWelcome.text = "Welcome!"
+//            }
+//        }
 
         homePageViewModel.walletBalance.observe(viewLifecycleOwner) { balance ->
             binding.tvTotalBalance.text = "$${String.format("%.2f", balance)}"

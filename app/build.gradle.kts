@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.room.common)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -80,6 +81,16 @@ dependencies {
     implementation(libs.converter.moshi)
 
     implementation(libs.androidx.lifecycle.livedata.ktx)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.play.services.auth)
+    implementation (libs.androidx.lifecycle.viewmodel.ktx) // Replace version with the actual one in libs.androidx.lifecycle.viewmodel.ktx
+    implementation (libs.glide) // Replace version with the actual one in libs.glide
+
+    kapt ("com.github.bumptech.glide:compiler:4.15.0")
+
 
 
 }

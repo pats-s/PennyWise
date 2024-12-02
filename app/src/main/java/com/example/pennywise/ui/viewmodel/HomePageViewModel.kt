@@ -1,5 +1,6 @@
 package com.example.pennywise.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,6 +10,7 @@ import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.remote.Transaction
 import com.example.pennywise.remote.User
 import com.example.pennywise.remote.Wallet
+import com.google.firebase.auth.FirebaseAuth
 import java.util.UUID
 
 class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel() {
@@ -44,21 +46,46 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
         fetchCategories()
     }
 
+//    private fun fetchUserData() {
+//        // Replace this with actual logic for fetching the logged-in user
+//        val dummyUser = User(
+//            userId = "123",
+//            firstName = "John",
+//            lastName = "Doe",
+//            email = "john.doe@example.com",
+//            walletId = "wallet123"
+//        )
+//
+//        val dummyWallet = Wallet(walletId = "wallet123", balance = 250.75)
+//
+//        // Simulate user data fetching
+//        _userName.postValue(dummyUser.firstName)
+//        _walletBalance.postValue(dummyWallet.balance)
+//    }
+
     private fun fetchUserData() {
-        // Replace this with actual logic for fetching the logged-in user
-        val dummyUser = User(
-            userId = "123",
-            firstName = "John",
-            lastName = "Doe",
-            email = "john.doe@example.com",
-            walletId = "wallet123"
-        )
+        val currentUser = FirebaseAuth.getInstance().currentUser
 
-        val dummyWallet = Wallet(walletId = "wallet123", balance = 250.75)
+        if (currentUser != null) {
+            val userId = currentUser.uid
 
-        // Simulate user data fetching
-        _userName.postValue(dummyUser.firstName)
-        _walletBalance.postValue(dummyWallet.balance)
+            repository.getUserData(userId, onSuccess = { user ->
+                _userName.postValue(user.firstName)
+                Log.d("firstName",user.firstName)
+
+                // Fetch wallet data using the wallet ID from the user document
+                repository.getWallet(user.walletId, onSuccess = { wallet ->
+                    _walletBalance.postValue(wallet.balance)
+                }, onFailure = { exception ->
+                    _walletBalance.postValue(0.0) // Default balance
+                    _errorMessage.postValue("Failed to fetch wallet data: ${exception.message}")
+                })
+            }, onFailure = { exception ->
+                _errorMessage.postValue("Failed to fetch user data: ${exception.message}")
+            })
+        } else {
+            _errorMessage.postValue("No user is logged in.")
+        }
     }
 
     private fun fetchCategories() {
