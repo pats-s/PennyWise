@@ -32,6 +32,12 @@ class PastTransactionsFragment : Fragment() {
 
     private lateinit var transactionAdapter: TransactionAdapter
 
+    private var selectedStartOfWeek: String? = null
+    private var selectedEndOfWeek: String? = null
+    private var selectedStartOfMonth: String? = null
+    private var selectedEndOfMonth: String? = null
+
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -56,8 +62,9 @@ class PastTransactionsFragment : Fragment() {
 
         observeViewModel()
 
-        homePageViewModel.fetchPastTransactions()
         homePageViewModel.fetchCategoriesForMapping()
+        homePageViewModel.fetchPastTransactions()
+
     }
 
     private fun observeViewModel() {
@@ -72,25 +79,22 @@ class PastTransactionsFragment : Fragment() {
         _binding = null
     }
 
-    private fun filterTransactionsBy(filterType: String) {
+    private fun filterTransactionsBy(filterType: String, selectedDate: String? = null, selectedStartOfWeek: String? = null, selectedEndOfWeek: String? = null) {
         when (filterType) {
             "Day" -> {
-                val today = SimpleDateFormat("d/M/yyyy", Locale.getDefault()).format(Date())
-                homePageViewModel.fetchFilteredTransactions(today, null, null)
+                if (selectedDate != null) {
+                    homePageViewModel.fetchFilteredTransactions(day = selectedDate, startOfWeekOrMonth = null, endOfWeek = null)
+                }
             }
             "Week" -> {
-                val calendar = Calendar.getInstance()
-                calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                val startOfWeek = SimpleDateFormat("d/M/yyyy", Locale.getDefault()).format(calendar.time)
-
-                calendar.add(Calendar.DAY_OF_WEEK, 6)
-                val endOfWeek = SimpleDateFormat("d/M/yyyy", Locale.getDefault()).format(calendar.time)
-
-                homePageViewModel.fetchFilteredTransactions(null, startOfWeek, endOfWeek)
+                if (selectedStartOfWeek != null && selectedEndOfWeek != null) {
+                    homePageViewModel.fetchFilteredTransactions(day = null, startOfWeekOrMonth = selectedStartOfWeek, endOfWeek = selectedEndOfWeek)
+                }
             }
             "Month" -> {
-                val currentMonth = SimpleDateFormat("M/yyyy", Locale.getDefault()).format(Date())
-                homePageViewModel.fetchFilteredTransactions(null, currentMonth, null)
+                if (selectedStartOfWeek != null && selectedEndOfWeek != null) {
+                    homePageViewModel.fetchFilteredTransactions(day = null, startOfWeekOrMonth = selectedStartOfWeek, endOfWeek = selectedEndOfWeek)
+                }
             }
         }
     }
@@ -102,45 +106,63 @@ class PastTransactionsFragment : Fragment() {
         val applyFilterButton = dialogView.findViewById<Button>(R.id.btnApplyFilter)
 
         var selectedDate: String? = null
-        var selectedStartOfWeekOrMonth: String? = null
-        var selectedEndOfWeek: String? = null
 
         // Date picker logic
         selectDateButton.setOnClickListener {
             val calendar = Calendar.getInstance()
             DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
-                val date = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year)
-                selectedDate = date
-                selectedStartOfWeekOrMonth = "$month/$year"
-                selectedEndOfWeek = calculateEndOfWeek(dayOfMonth, month, year) // Helper for week range
+                val selectedDay = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year)
+                selectedDate = selectedDay
+
+                // Calculate start and end of the week
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, month)
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                selectedStartOfWeek = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time)
+
+                calendar.add(Calendar.DAY_OF_WEEK, 6) // End of week
+                selectedEndOfWeek = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time)
+
+                // Calculate start and end of the month
+                calendar.set(Calendar.DAY_OF_MONTH, 1) // Start of month
+                selectedStartOfMonth = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time)
+
+                calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH)) // End of month
+                selectedEndOfMonth = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time)
+
             }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
         }
 
-        // Create the dialog here
+        // Create the dialog
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
             .create()
 
-        // Apply filter
+        // Apply filter logic
         applyFilterButton.setOnClickListener {
             val selectedOption = when (radioGroup.checkedRadioButtonId) {
-                R.id.rbDay -> selectedDate
-                R.id.rbWeek -> selectedStartOfWeekOrMonth to selectedEndOfWeek
-                R.id.rbMonth -> selectedStartOfWeekOrMonth
+                R.id.rbDay -> "Day"
+                R.id.rbWeek -> "Week"
+                R.id.rbMonth -> "Month"
                 else -> null
             }
 
-            when (selectedOption) {
-                is String -> filterTransactionsByDay(selectedOption)
-                is Pair<*, *> -> filterTransactionsByWeek(selectedOption.first as String, selectedOption.second as String)
-                is String? -> selectedOption?.let { it1 -> filterTransactionsByMonth(it1) }
+            selectedOption?.let {
+                when (it) {
+                    "Day" -> filterTransactionsBy(filterType = it, selectedDate = selectedDate)
+                    "Week" -> filterTransactionsBy(filterType = it, selectedStartOfWeek = selectedStartOfWeek, selectedEndOfWeek = selectedEndOfWeek)
+                    "Month" -> filterTransactionsBy(filterType = it, selectedStartOfWeek = selectedStartOfMonth, selectedEndOfWeek = selectedEndOfMonth)
+                }
             }
 
-            dialog.dismiss() // Now dialog is properly defined and can be dismissed
+            dialog.dismiss()
         }
 
-        dialog.show() // Show the dialog
+        dialog.show()
     }
+
+
 
 
     // Helper function to calculate end of the week (example only, logic may vary)

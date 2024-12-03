@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -30,14 +31,6 @@ class PennyWiseRepository private constructor(context: Context) {
         appSettingsDao = database.appSettingsDao()
     }
 
-    // App Settings
-    suspend fun saveSettings(settings: AppSettingsEntity) {
-        appSettingsDao.saveSettings(settings)
-    }
-
-    suspend fun getSettings(): AppSettingsEntity? {
-        return appSettingsDao.getSettings()
-    }
 
     fun getUserData(userId: String, onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit) {
         firestore.collection("users").document(userId)
@@ -166,25 +159,25 @@ class PennyWiseRepository private constructor(context: Context) {
         onSuccess: (List<SavingGoal>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        val savingGoalsCollection = firestore.collection("saving_goals")
-
-        savingGoalsCollection.whereEqualTo("walletId", walletId).get()
+        firestore.collection("saving_goals")
+            .whereEqualTo("walletId", walletId)
+            .get()
             .addOnSuccessListener { snapshot ->
-                val savingGoals = snapshot.toObjects(SavingGoal::class.java)
-                onSuccess(savingGoals)
+                val goals = snapshot.toObjects(SavingGoal::class.java)
+                onSuccess(goals)
             }
             .addOnFailureListener { exception ->
-                println("Failed to fetch saving goals: ${exception.message}")
                 onFailure(exception)
             }
     }
+
 
     fun getTodayTransactions(
         onSuccess: (List<Transaction>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         // Format the current date as it appears in Firestore
-        val today = SimpleDateFormat("d/M/yyyy", Locale.getDefault()).format(Date()) // Adjust format to match Firestore
+        val today = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()) // Adjust format to match Firestore
 
         firestore.collection("transactions")
             .whereEqualTo("date", today)
@@ -240,13 +233,17 @@ class PennyWiseRepository private constructor(context: Context) {
         val transactionsCollection = firestore.collection("transactions")
         var query: Query = transactionsCollection
 
+        // Ensure all dates are formatted as `dd/MM/yyyy`
+        val formattedStart = startOfWeekOrMonth?.let { formatDateToStandard(it) }
+        val formattedEnd = endOfWeek?.let { formatDateToStandard(it) }
+
         when {
             day != null -> {
-                query = query.whereEqualTo("date", day)
+                query = query.whereEqualTo("date", formatDateToStandard(day))
             }
-            startOfWeekOrMonth != null && endOfWeek != null -> {
-                query = query.whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
-                    .whereLessThanOrEqualTo("date", endOfWeek)
+            formattedStart != null && formattedEnd != null -> {
+                query = query.whereGreaterThanOrEqualTo("date", formattedStart)
+                    .whereLessThanOrEqualTo("date", formattedEnd)
             }
         }
 
@@ -259,6 +256,32 @@ class PennyWiseRepository private constructor(context: Context) {
                 onFailure(exception)
             }
     }
+
+
+    private fun formatDateToStandard(date: String): String {
+        val inputFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault()) // Flexible input format
+        val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) // Consistent output format
+        return try {
+            val parsedDate = inputFormat.parse(date)
+            outputFormat.format(parsedDate)
+        } catch (e: Exception) {
+            date // Return original date if parsing fails
+        }
+    }
+
+
+    // Helper to calculate end of the month
+    private fun calculateEndOfMonth(startOfMonth: String): String {
+        val dateFormat = SimpleDateFormat("M/yyyy", Locale.getDefault())
+        val parsedDate = dateFormat.parse(startOfMonth)
+        val calendar = Calendar.getInstance()
+        parsedDate?.let {
+            calendar.time = it
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+        }
+        return SimpleDateFormat("d/M/yyyy", Locale.getDefault()).format(calendar.time)
+    }
+
 
     fun getWallet(
         walletId: String,

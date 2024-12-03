@@ -12,6 +12,7 @@
         android:id="@+id/tvTitlePastTransactions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textStyle="bold"
         android:text="Past Transactions"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/primaryDark"
