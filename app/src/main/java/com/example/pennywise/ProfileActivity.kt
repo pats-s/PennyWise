@@ -1,7 +1,9 @@
 package com.example.pennywise
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -11,6 +13,7 @@ import com.example.pennywise.ui.adapter.ProfileAdapter
 import com.example.pennywise.ui.adapter.UserProfileField
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.security.MessageDigest
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -22,12 +25,14 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var profileFields: MutableList<UserProfileField>
     private lateinit var user: User
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
         recyclerView = findViewById(R.id.recyclerViewProfile)
         recyclerView.layoutManager = LinearLayoutManager(this)
+
 
         // Check if a user is logged in
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -36,6 +41,7 @@ class ProfileActivity : AppCompatActivity() {
             Log.d("auth user","no logged in user")
             return
         }
+
 
         // Fetch user data from Firestore
         val db = FirebaseFirestore.getInstance()
@@ -103,6 +109,18 @@ class ProfileActivity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
+        val logoutButton: Button = findViewById(R.id.logoutButton)
+
+        logoutButton.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
+
+            // Redirect to SignInActivity
+            val intent = Intent(this, SignInActivity::class.java)
+            startActivity(intent)
+            finish() // Finish ProfileActivity so user can't navi
+        }
+
     }
 
     // Handle updating profile fields
@@ -140,7 +158,7 @@ class ProfileActivity : AppCompatActivity() {
                 val userRef = FirebaseFirestore.getInstance().collection("users")
                     .document(currentUser.uid)
 
-                userRef.update("password", newPassword)
+                userRef.update("password", hashPassword(newPassword))
                     .addOnSuccessListener {
                         Toast.makeText(this, "Password updated successfully", Toast.LENGTH_SHORT).show()
                     }
@@ -160,7 +178,11 @@ class ProfileActivity : AppCompatActivity() {
                 ).show()
             }
     }
-
+    private fun hashPassword(password: String): String {
+        val messageDigest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = messageDigest.digest(password.toByteArray(Charsets.UTF_8))
+        return hashedBytes.joinToString("") { "%02x".format(it) }
+    }
 
 
 }
