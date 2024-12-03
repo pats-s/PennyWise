@@ -86,7 +86,11 @@ class RegisterActivity : AppCompatActivity() {
 
 
             if (email.isNotEmpty() && password.isNotEmpty() && firstname.isNotEmpty() && lastname.isNotEmpty() && selectedDob != null) {
-                registerViewModel.registerUser(email, password, firstname, lastname, selectedDob!!)
+                if (isPasswordComplex(password)) {
+                    registerViewModel.registerUser(email, password, firstname, lastname, selectedDob!!)
+                } else {
+                    Toast.makeText(this, "Password must be at least 8 characters long, include a digit, an uppercase letter, and a special character.", Toast.LENGTH_LONG).show()
+                }
             } else {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
             }
@@ -127,6 +131,11 @@ class RegisterActivity : AppCompatActivity() {
             registerViewModel.handleGoogleSignInResult(task)
         }
     }
+    private fun isPasswordComplex(password: String): Boolean {
+        val passwordPattern = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#\$%^&+=])(?=\\S+\$).{8,}\$"
+        return password.matches(passwordPattern.toRegex())
+    }
+
 
 
 
