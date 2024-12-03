@@ -93,7 +93,7 @@ class SignInActivity : AppCompatActivity() {
         signInViewModel.signInResult.observe(this, Observer { result ->
             result.onSuccess { message ->
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-                navigateToProfileActivity()
+                navigateToMainActivity()
             }.onFailure { exception ->
                 Toast.makeText(this, exception.message, Toast.LENGTH_SHORT).show()
             }
@@ -110,10 +110,10 @@ class SignInActivity : AppCompatActivity() {
         // Detach the AuthStateListener
         auth.removeAuthStateListener(authStateListener)
     }
-    private fun navigateToProfileActivity() {
+    private fun navigateToMainActivity() {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
-            val intent = Intent(this, ProfileActivity::class.java)
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
         } else {
