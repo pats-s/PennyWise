@@ -53,7 +53,7 @@ class RegisterActivity : AppCompatActivity() {
         lastnameEditText = findViewById(R.id.lastnameEditText)
         dobTextView = findViewById(R.id.dobTextView)
 
-        registerButton = findViewById(R.id.RegisterButton)
+        registerButton = findViewById(R.id.registerButton)
         googleSignInButton = findViewById(R.id.googleSignInButton)
 
         // Observe registration status
