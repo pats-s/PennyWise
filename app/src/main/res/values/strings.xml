@@ -1,5 +1,10 @@
 <resources>
     <string name="app_name">PennyWise</string>
     <string name="register_link">Don\'t have an account? Register now</string>
+    <string name="sign_in">Sign In</string>
+    <string name="password">Password</string>
+    <string name="email">yourname@example.com</string>
+    <string name="description">Manage your finances easily using our intuitive and user-friendly interface and set financial goals and monitor your progress</string>
+    <string name="Title">Welcome to your ultimate finance tracker. Manage your spending seamlessly.</string>
 
 </resources>

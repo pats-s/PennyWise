@@ -8,6 +8,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import java.security.MessageDigest
 
 class RegisterViewModel(application: Application) : AndroidViewModel(application) {
     val registrationStatus = MutableLiveData<String>()
@@ -18,11 +19,16 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-                    saveAdditionalData(userId, firstname, lastname, email, password, dob)
+                    saveAdditionalData(userId, firstname, lastname, email, hashPassword(password), dob)
                 } else {
                     registrationStatus.value = "Registration failed: ${task.exception?.message}"
                 }
             }
+    }
+    private fun hashPassword(password: String): String {
+        val messageDigest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = messageDigest.digest(password.toByteArray(Charsets.UTF_8))
+        return hashedBytes.joinToString("") { "%02x".format(it) }
     }
 
 

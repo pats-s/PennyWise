@@ -23,5 +23,6 @@
         android:id="@+id/saveNameButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:backgroundTint="@color/primaryLight"
         android:text="Save" />
 </LinearLayout>
