@@ -56,7 +56,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
                     val firstname = account.givenName ?: ""
                     val lastname = account.familyName ?: ""
                     val userId = account.id ?: ""
-                    val dob = null // Replace this with an actual DOB if Google API provides it
+                    val dob = null
                     authenticateWithFirebase(account) { userId ->
                         saveAdditionalData(userId,firstname,lastname,email,"GoogleAuth", dob)
                     }
@@ -102,7 +102,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         firestore.collection("wallets")
             .add(walletMap) // Add the wallet document
             .addOnSuccessListener { walletDocument ->
-                val walletId = walletDocument.id // Get the generated wallet ID
+                val walletId = walletDocument.id
 
                 // Add user data to Firestore
                 val userMap = hashMapOf(

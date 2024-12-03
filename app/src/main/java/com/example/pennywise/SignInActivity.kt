@@ -66,7 +66,6 @@ class SignInActivity : AppCompatActivity() {
         }
         val registerLink = findViewById<TextView>(R.id.registerLink)
 
-        // Set click listener for "Register now" link
         registerLink.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
@@ -101,13 +100,11 @@ class SignInActivity : AppCompatActivity() {
     }
     override fun onStart() {
         super.onStart()
-        // Attach the AuthStateListener
         auth.addAuthStateListener(authStateListener)
     }
 
     override fun onStop() {
         super.onStop()
-        // Detach the AuthStateListener
         auth.removeAuthStateListener(authStateListener)
     }
     private fun navigateToMainActivity() {
@@ -133,7 +130,7 @@ class SignInActivity : AppCompatActivity() {
             // Update Firestore document
             val firestore = FirebaseFirestore.getInstance()
             firestore.collection("users").document(userId)
-                .update("hashedPassword", hashedPassword)
+                .update("password", hashedPassword)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Password updated in Firestore", Toast.LENGTH_SHORT).show()
                 }

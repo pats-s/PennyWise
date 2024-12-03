@@ -33,8 +33,7 @@ class ProfileActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.recyclerViewProfile)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-
-        // Check if a user is logged in
+        // checking if there is an actual logged in user
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser == null) {
             Toast.makeText(this, "No user logged in", Toast.LENGTH_SHORT).show()
@@ -43,7 +42,6 @@ class ProfileActivity : AppCompatActivity() {
         }
 
 
-        // Fetch user data from Firestore
         val db = FirebaseFirestore.getInstance()
         val userRef = db.collection("users").document(currentUser.uid)
 
@@ -118,7 +116,7 @@ class ProfileActivity : AppCompatActivity() {
             // Redirect to SignInActivity
             val intent = Intent(this, SignInActivity::class.java)
             startActivity(intent)
-            finish() // Finish ProfileActivity so user can't navi
+            finish()
         }
 
     }
@@ -151,10 +149,8 @@ class ProfileActivity : AppCompatActivity() {
             return
         }
 
-        // Update password in Firebase Authentication
         currentUser.updatePassword(newPassword)
             .addOnSuccessListener {
-                // Update password in Firestore after successfully updating in Authentication
                 val userRef = FirebaseFirestore.getInstance().collection("users")
                     .document(currentUser.uid)
 
