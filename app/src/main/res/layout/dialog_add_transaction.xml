@@ -90,7 +90,6 @@
             android:backgroundTint="@color/primaryDark"
             android:text="Cancel"
             android:textColor="@color/white"
-            app:layout_constraintEnd_toStartOf="@+id/btnSubmit"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

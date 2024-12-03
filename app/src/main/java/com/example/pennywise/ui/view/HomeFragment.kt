@@ -3,6 +3,7 @@ package com.example.pennywise.ui.view
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,15 +13,20 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioGroup
 import android.widget.Spinner
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.pennywise.ProfileActivity
 import com.example.pennywise.R
 import com.example.pennywise.databinding.FragmentHomepageBinding
 import com.example.pennywise.remote.SavingGoal
+import com.example.pennywise.ui.adapter.SavingGoalAdapter
 import com.example.pennywise.ui.adapter.TransactionAdapter
 import com.example.pennywise.ui.viewmodel.HomePageViewModel
 import com.example.pennywise.ui.viewmodel.HomePageViewModelFactory
@@ -43,6 +49,9 @@ class HomeFragment : Fragment() {
 
     // Initialize TransactionAdapter
     private lateinit var transactionAdapter: TransactionAdapter
+    private lateinit var savingGoalAdapter: SavingGoalAdapter
+
+    private lateinit var currentUserWalletId: String
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -52,9 +61,18 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint("SetTextI18n", "UseSwitchCompatOrMaterialCode")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Fetch wallet ID dynamically
+        fetchUserWalletId { walletId ->
+            currentUserWalletId = walletId
+            setupRecyclerView()
+            observeViewModel()
+            loadInitialData()
+        }
+
         homePageViewModel.fetchCategoriesForMapping()
         // Initialize the RecyclerView
         setupRecyclerView()
@@ -94,7 +112,36 @@ class HomeFragment : Fragment() {
             binding.tvEurToLbp.text = "EUR to LBP: ${eurToLbp.format()}"
         }
 
+        binding.btnGoToProfile.setOnClickListener{
+            val intent = Intent(requireContext(), ProfileActivity::class.java)
+            startActivity(intent)
+        }
+
     }
+
+    private fun fetchUserWalletId(onWalletIdFetched: (String) -> Unit) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            val userId = currentUser.uid
+            val firestore = FirebaseFirestore.getInstance()
+            firestore.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    val walletId = snapshot.getString("walletId")
+                    if (!walletId.isNullOrEmpty()) {
+                        onWalletIdFetched(walletId)
+                    } else {
+                        showToast("Failed to fetch wallet ID")
+                    }
+                }
+                .addOnFailureListener {
+                    showToast("Failed to fetch user data: ${it.message}")
+                }
+        } else {
+            showToast("No user is logged in.")
+        }
+    }
+
     private fun fetchAndSetWelcomeMessage() {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
@@ -129,6 +176,12 @@ class HomeFragment : Fragment() {
             adapter = transactionAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
+
+        savingGoalAdapter = SavingGoalAdapter(emptyList())
+        binding.rvSavingGoals.apply {
+            adapter = savingGoalAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+        }
     }
 
     private fun observeViewModel() {
@@ -152,6 +205,10 @@ class HomeFragment : Fragment() {
 
         homePageViewModel.walletBalance.observe(viewLifecycleOwner) { balance ->
             binding.tvTotalBalance.text = "$${String.format("%.2f", balance)}"
+        }
+
+        homePageViewModel.savingGoals.observe(viewLifecycleOwner) { savingGoals ->
+            savingGoalAdapter.updateSavingGoals(savingGoals)
         }
 
         homePageViewModel.categories.observe(viewLifecycleOwner) { categories ->
@@ -184,7 +241,7 @@ class HomeFragment : Fragment() {
             val adapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_spinner_item,
-                categories.map { it.name } // Display category names
+                categories.map { it.name }
             )
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             categorySpinner.adapter = adapter
@@ -197,27 +254,20 @@ class HomeFragment : Fragment() {
                 requireContext(),
                 { _, year, month, dayOfMonth ->
                     val selectedDate = "$dayOfMonth/${month + 1}/$year"
-                    datePicker.text = selectedDate // Update the TextView with the selected date
+                    datePicker.text = selectedDate
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
             )
-
-            // Restrict future dates
             datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
             datePickerDialog.show()
         }
 
-        // Show the dialog
-        val dialog = AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-            .create()
+        val dialog = AlertDialog.Builder(requireContext()).setView(dialogView).create()
 
-        // Handle Cancel Button
         cancelButton.setOnClickListener { dialog.dismiss() }
 
-        // Handle Submit Button
         submitButton.setOnClickListener {
             val selectedType = when (transactionTypeGroup.checkedRadioButtonId) {
                 R.id.rbIncome -> "Income"
@@ -230,39 +280,34 @@ class HomeFragment : Fragment() {
             val date = datePicker.text.toString()
 
             if (selectedType.isNotEmpty() && amount != null && date.isNotEmpty()) {
-                // Fetch categories from ViewModel and validate selectedCategoryPosition
                 val categories = homePageViewModel.categories.value
                 if (categories != null && selectedCategoryPosition in categories.indices) {
                     val selectedCategory = categories[selectedCategoryPosition]
 
-                    // Submit transaction
                     homePageViewModel.addTransaction(
                         type = selectedType,
                         amount = amount,
                         categoryId = selectedCategory.id,
                         date = date
                     )
-                    dialog.dismiss()
 
-                    // Refresh today's transactions
-                    homePageViewModel.fetchTodayTransactions()
+                    dialog.dismiss()
                 } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Please select a valid category",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(requireContext(), "Please select a valid category", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Please fill in all fields",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
             }
         }
 
         dialog.show()
+    }
+
+
+    private fun loadInitialData() {
+        homePageViewModel.fetchTodayTransactions()
+        homePageViewModel.fetchSavingGoals(currentUserWalletId)
+        homePageViewModel.fetchCategoriesForMapping()
     }
 
     private fun showSavingGoalDialog() {
@@ -276,30 +321,21 @@ class HomeFragment : Fragment() {
         val cancelButton = dialogView.findViewById<Button>(R.id.btnCancelSavingGoal)
         val submitButton = dialogView.findViewById<Button>(R.id.btnSubmitSavingGoal)
 
-        val calendar = Calendar.getInstance()
+        var selectedStartDate: Calendar? = null
+        var selectedEndDate: Calendar? = null
 
         startDatePicker.setOnClickListener {
-            DatePickerDialog(
-                requireContext(),
-                { _, year, month, dayOfMonth ->
-                    startDatePicker.text = "$dayOfMonth/${month + 1}/$year"
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            showDatePicker { calendar ->
+                selectedStartDate = calendar
+                startDatePicker.text = "${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
+            }
         }
 
         endDatePicker.setOnClickListener {
-            DatePickerDialog(
-                requireContext(),
-                { _, year, month, dayOfMonth ->
-                    endDatePicker.text = "$dayOfMonth/${month + 1}/$year"
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            ).show()
+            showDatePicker { calendar ->
+                selectedEndDate = calendar
+                endDatePicker.text = "${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
+            }
         }
 
         val dialog = AlertDialog.Builder(requireContext()).setView(dialogView).create()
@@ -312,31 +348,26 @@ class HomeFragment : Fragment() {
             val startDate = startDatePicker.text.toString()
             val endDate = endDatePicker.text.toString()
 
+            // Validation
             if (title.isEmpty() || targetAmount == null || startDate.isEmpty() || endDate.isEmpty()) {
-                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                showToast("Please fill in all fields")
                 return@setOnClickListener
             }
 
-            if (targetAmount <= 0) {
-                Toast.makeText(requireContext(), "Target amount must be greater than 0", Toast.LENGTH_SHORT).show()
+            if (selectedStartDate != null && selectedEndDate != null && selectedEndDate!!.before(selectedStartDate)) {
+                showToast("End date cannot be earlier than the start date")
                 return@setOnClickListener
             }
 
-            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            if (sdf.parse(endDate)?.before(sdf.parse(startDate)) == true) {
-                Toast.makeText(requireContext(), "End date must be after start date", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
+            // Create saving goal
             val savingGoal = SavingGoal(
                 id = UUID.randomUUID().toString(),
                 title = title,
                 targetAmount = targetAmount,
                 startDate = startDate,
                 endDate = endDate,
-                walletId = "wallet123" // Replace with logged-in user's wallet ID
+                walletId = currentUserWalletId
             )
-
             homePageViewModel.addSavingGoal(savingGoal)
             dialog.dismiss()
         }
@@ -344,6 +375,26 @@ class HomeFragment : Fragment() {
         dialog.show()
     }
 
+    private fun showDatePicker(onDateSelected: (Calendar) -> Unit) {
+        val calendar = Calendar.getInstance()
+        DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                val selectedDate = Calendar.getInstance().apply {
+                    set(year, month, dayOfMonth)
+                }
+                onDateSelected(selectedDate)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
+
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
 
     private fun navigateToPastTransactions() {
         findNavController().navigate(R.id.action_homeFragment_to_pastTransactionsFragment)

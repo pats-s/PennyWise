@@ -19,4 +19,5 @@
         android:id="@+id/action_homeFragment_to_pastTransactionsFragment"
         app:destination="@id/pastTransactionsFragment" />
 
+
 </navigation>

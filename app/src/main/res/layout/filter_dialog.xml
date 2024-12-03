@@ -21,18 +21,21 @@
             android:id="@+id/rbDay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:buttonTint="@color/primaryLight"
             android:text="By Day" />
 
         <RadioButton
             android:id="@+id/rbWeek"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:buttonTint="@color/primaryLight"
             android:text="By Week" />
 
         <RadioButton
             android:id="@+id/rbMonth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:buttonTint="@color/primaryLight"
             android:text="By Month" />
     </RadioGroup>
 
@@ -40,6 +43,7 @@
         android:id="@+id/btnSelectDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:backgroundTint="@color/primary"
         android:text="Select Date"
         android:layout_marginTop="16dp" />
 
@@ -47,6 +51,7 @@
         android:id="@+id/btnApplyFilter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:backgroundTint="@color/primary"
         android:text="Apply Filter"
         android:layout_marginTop="16dp" />
 </LinearLayout>

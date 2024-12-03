@@ -5,12 +5,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.pennywise.PennyWiseRepository
+import com.example.pennywise.local.entities.AppSettingsEntity
 import com.example.pennywise.remote.Category
 import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.remote.Transaction
 import com.example.pennywise.remote.User
 import com.example.pennywise.remote.Wallet
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 import java.util.UUID
 
 class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel() {
@@ -39,6 +43,8 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
     private val _exchangeRates = MutableLiveData<Map<String, Double>>()
     val exchangeRates: LiveData<Map<String, Double>> get() = _exchangeRates
 
+    private val _savingGoals = MutableLiveData<List<SavingGoal>>()
+    val savingGoals: LiveData<List<SavingGoal>> get() = _savingGoals
 
     init {
         fetchUserData()
@@ -46,22 +52,6 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
         fetchCategories()
     }
 
-//    private fun fetchUserData() {
-//        // Replace this with actual logic for fetching the logged-in user
-//        val dummyUser = User(
-//            userId = "123",
-//            firstName = "John",
-//            lastName = "Doe",
-//            email = "john.doe@example.com",
-//            walletId = "wallet123"
-//        )
-//
-//        val dummyWallet = Wallet(walletId = "wallet123", balance = 250.75)
-//
-//        // Simulate user data fetching
-//        _userName.postValue(dummyUser.firstName)
-//        _walletBalance.postValue(dummyWallet.balance)
-//    }
 
     private fun fetchUserData() {
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -96,47 +86,69 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
     }
 
     fun addTransaction(type: String, amount: Double, categoryId: String, date: String) {
-        val walletId = "wallet123" // Replace with the actual wallet ID of the logged-in user
+        val formattedDate = formatDateToStandard(date) // Format date before saving
 
-        repository.getWallet(walletId, onSuccess = { wallet ->
-            val currentBalance = wallet.balance
-            if (type == "Expense" && amount > currentBalance) {
-                _errorMessage.postValue("Insufficient balance!")
-                return@getWallet
-            }
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            val userId = currentUser.uid
 
-            val updatedBalance = if (type == "Income") {
-                currentBalance + amount
-            } else {
-                currentBalance - amount
-            }
+            repository.getUserData(userId, onSuccess = { user ->
+                repository.getWallet(user.walletId, onSuccess = { wallet ->
+                    val currentBalance = wallet.balance
 
-            val transaction = Transaction(
-                id = UUID.randomUUID().toString(),
-                type = type,
-                amount = amount,
-                categoryId = categoryId,
-                walletId = walletId,
-                date = date
-            )
+                    if (type == "Expense" && amount > currentBalance) {
+                        _errorMessage.postValue("Insufficient balance!")
+                        return@getWallet
+                    }
 
-            repository.addTransaction(
-                transaction = transaction,
-                onSuccess = {
-                    repository.updateWalletBalance(walletId, updatedBalance, onSuccess = {
-                        fetchUserData() // Refresh user data to update the balance in UI
+                    val updatedBalance = if (type == "Income") {
+                        currentBalance + amount
+                    } else {
+                        currentBalance - amount
+                    }
+
+                    val transaction = Transaction(
+                        id = UUID.randomUUID().toString(),
+                        type = type,
+                        amount = amount,
+                        categoryId = categoryId,
+                        walletId = user.walletId,
+                        date = formattedDate // Use the formatted date
+                    )
+
+                    repository.addTransaction(transaction, onSuccess = {
+                        repository.updateWalletBalance(user.walletId, updatedBalance, onSuccess = {
+                            _walletBalance.postValue(updatedBalance)
+                            fetchTodayTransactions()
+                        }, onFailure = {
+                            _errorMessage.postValue("Failed to update wallet balance!")
+                        })
                     }, onFailure = {
-                        _errorMessage.postValue("Failed to update wallet balance!")
+                        _errorMessage.postValue("Failed to add transaction: ${it.message}")
                     })
-                },
-                onFailure = { exception ->
-                    _errorMessage.postValue("Failed to add transaction: ${exception.message}")
-                }
-            )
-        }, onFailure = { exception ->
-            _errorMessage.postValue("Failed to fetch wallet: ${exception.message}")
-        })
+                }, onFailure = {
+                    _errorMessage.postValue("Failed to fetch wallet: ${it.message}")
+                })
+            }, onFailure = {
+                _errorMessage.postValue("Failed to fetch user data: ${it.message}")
+            })
+        } else {
+            _errorMessage.postValue("No user is logged in.")
+        }
     }
+
+    private fun formatDateToStandard(date: String): String {
+        val inputFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        return try {
+            val parsedDate = inputFormat.parse(date)
+            outputFormat.format(parsedDate)
+        } catch (e: Exception) {
+            date // If parsing fails, return the original date
+        }
+    }
+
+
 
     fun fetchTodayTransactions() {
         repository.getTodayTransactions(
@@ -164,11 +176,22 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
         )
     }
 
+    fun fetchSavingGoals(walletId: String) {
+        repository.getSavingGoals(walletId,
+            onSuccess = { goals ->
+                _savingGoals.postValue(goals)
+            },
+            onFailure = { exception ->
+                _errorMessage.postValue("Failed to fetch saving goals: ${exception.message}")
+            }
+        )
+    }
+
     fun addSavingGoal(savingGoal: SavingGoal) {
         repository.addSavingGoal(
             savingGoal,
-            onSuccess = { println("Saving goal added successfully") },
-            onFailure = { println("Failed to add saving goal") }
+            onSuccess = { fetchSavingGoals(savingGoal.walletId) },
+            onFailure = { _errorMessage.postValue("Failed to add saving goal") }
         )
     }
 
@@ -203,7 +226,7 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
                 _pastTransactions.postValue(transactions)
             },
             onFailure = { exception ->
-                println("Failed to fetch filtered transactions: ${exception.message}")
+                _errorMessage.postValue("Failed to fetch filtered transactions: ${exception.message}")
             }
         )
     }
