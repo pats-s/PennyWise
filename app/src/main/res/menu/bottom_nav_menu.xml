@@ -14,8 +14,8 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/nav_analytics"
+        android:id="@+id/fragment_insights"
         android:icon="@drawable/ic_analytics"
-        android:title="Analytics"
+        android:title="Insights"
         app:showAsAction="ifRoom" />
 </menu>
