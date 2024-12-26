@@ -16,7 +16,6 @@ import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -36,6 +35,14 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
+import com.example.pennywise.local.entities.AppSettingsEntity
+import kotlinx.coroutines.launch
+import androidx.room.Room
+import androidx.lifecycle.lifecycleScope
+import com.example.pennywise.PennyWiseDatabase
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
 
@@ -390,6 +397,7 @@ class HomeFragment : Fragment() {
             calendar.get(Calendar.DAY_OF_MONTH)
         ).show()
     }
+
 
 
     private fun showToast(message: String) {
