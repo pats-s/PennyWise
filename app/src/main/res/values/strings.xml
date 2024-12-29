@@ -12,5 +12,11 @@
     <string name="register">Register</string>
     <string name="continue_with_google">Continue With Google</string>
     <string name="top_spending_categories">Top Spending Categories</string>
+        <string-array name="filter_options">
+            <item>Day</item>
+            <item>Week</item>
+            <item>Month</item>
+        </string-array>
+
 
 </resources>

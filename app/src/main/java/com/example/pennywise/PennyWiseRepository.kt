@@ -272,6 +272,41 @@ class PennyWiseRepository private constructor(context: Context) {
             }
     }
 
+    fun getFilteredTransactions1(
+        day: String?,
+        startOfWeekOrMonth: String?,
+        endOfWeek: String?,
+        onSuccess: (List<Transaction>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val transactionsCollection = firestore.collection("transactions")
+        var query: Query = transactionsCollection
+
+        when {
+            day != null -> {
+                query = query.whereEqualTo("date", day)
+            }
+            startOfWeekOrMonth != null && endOfWeek != null -> {
+                query = query
+                    .whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
+                    .whereLessThanOrEqualTo("date", endOfWeek)
+            }
+            startOfWeekOrMonth != null -> {
+                query = query.whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
+            }
+        }
+
+        query.get()
+            .addOnSuccessListener { snapshot ->
+                val transactions = snapshot.toObjects(Transaction::class.java)
+                onSuccess(transactions)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
+
 
     private fun formatDateToStandard(date: String): String {
         val inputFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault()) // Flexible input format
