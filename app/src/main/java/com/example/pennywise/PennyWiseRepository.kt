@@ -48,9 +48,6 @@ class PennyWiseRepository private constructor(context: Context) {
             }
     }
 
-
-
-
     fun uploadPredefinedCategories(
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
@@ -81,6 +78,24 @@ class PennyWiseRepository private constructor(context: Context) {
                 onFailure(exception)
             }
     }
+
+    fun getCategoryName(
+        categoryId: String,
+        onSuccess: (String?) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("categories")
+            .document(categoryId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val category = snapshot.toObject(Category::class.java)
+                onSuccess(category?.name)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
 
     fun addTransaction(
         transaction: Transaction,

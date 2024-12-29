@@ -89,7 +89,8 @@ dependencies {
     implementation (libs.androidx.lifecycle.viewmodel.ktx) // Replace version with the actual one in libs.androidx.lifecycle.viewmodel.ktx
     implementation (libs.glide) // Replace version with the actual one in libs.glide
 
-    implementation (libs.mpandroidchart)
+
+
 
     kapt ("com.github.bumptech.glide:compiler:4.15.0")
 

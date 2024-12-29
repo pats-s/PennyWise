@@ -49,6 +49,7 @@
 
     <!-- Income and Expense Info -->
     <LinearLayout
+        android:id="@+id/linearContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -77,5 +78,7 @@
             android:textColor="@color/primaryDark"
             android:gravity="center"/>
     </LinearLayout>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

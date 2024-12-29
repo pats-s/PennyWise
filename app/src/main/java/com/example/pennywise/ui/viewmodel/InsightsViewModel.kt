@@ -22,6 +22,9 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
+    private val _spendingByCategory = MutableLiveData<List<Pair<String, Double>>>()
+    val spendingByCategory: LiveData<List<Pair<String, Double>>> get() = _spendingByCategory
+
     fun calculateFinancialHealthScore(userId: String) {
         CoroutineScope(Dispatchers.IO).launch {
             repository.getUserData(
@@ -59,5 +62,7 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
             }
         )
     }
+
+
 }
 
