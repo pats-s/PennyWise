@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.pennywise.PennyWiseRepository
 import com.example.pennywise.databinding.FragmentInsightsBinding
+import com.example.pennywise.ui.adapter.CategorySpendingAdapter
 import com.example.pennywise.ui.viewmodel.InsightsViewModel
 import com.example.pennywise.ui.viewmodel.InsightsViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
@@ -23,6 +24,8 @@ class InsightsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentInsightsBinding.inflate(inflater, container, false)
+        binding.topCategoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
         val repository = PennyWiseRepository.getInstance(requireContext())
         viewModel = ViewModelProvider(
             this,
@@ -34,6 +37,7 @@ class InsightsFragment : Fragment() {
 
         if (loggedInUserId != null) {
             viewModel.calculateFinancialHealthScore(loggedInUserId)
+            viewModel.fetchTopSpendingCategories(loggedInUserId)
         }
 
         viewModel.financialHealthScore.observe(viewLifecycleOwner) { score ->
@@ -54,6 +58,12 @@ class InsightsFragment : Fragment() {
 
         viewModel.totalExpense.observe(viewLifecycleOwner) { expense ->
             binding.expenseTextView.text = "Expense: $${String.format("%.2f", expense)}"
+        }
+
+        // Observe spending by category and update RecyclerView
+        viewModel.spendingByCategory.observe(viewLifecycleOwner) { spendingList ->
+            val adapter = CategorySpendingAdapter(spendingList)
+            binding.topCategoriesRecyclerView.adapter = adapter
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { error ->

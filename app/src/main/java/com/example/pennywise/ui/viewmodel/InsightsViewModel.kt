@@ -1,5 +1,6 @@
 package com.example.pennywise.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -62,6 +63,40 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
             }
         )
     }
+
+
+    fun fetchTopSpendingCategories(walletId: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            repository.getTransactions(
+                onSuccess = { transactions ->
+                    val spendingByCategory = transactions
+                        .filter { it.type == "Expense" }
+                        .groupBy { it.categoryId }
+                        .mapValues { entry -> entry.value.sumOf { it.amount } }
+                        .toList()
+                        .sortedByDescending { it.second } // Sort by amount (highest to lowest)
+
+                    repository.getAllCategories(
+                        onSuccess = { categoriesMap ->
+                            val categorySpendingList = spendingByCategory.map { (categoryId, amount) ->
+                                val categoryName = categoriesMap[categoryId]?.name ?: "Unknown"
+                                Log.d("success","category added")
+                                Pair(categoryName, amount)
+                            }
+                            _spendingByCategory.postValue(categorySpendingList)
+                        },
+                        onFailure = { exception ->
+                            _errorMessage.postValue("Error fetching categories: ${exception.message}")
+                        }
+                    )
+                },
+                onFailure = { exception ->
+                    _errorMessage.postValue("Error fetching transactions: ${exception.message}")
+                }
+            )
+        }
+    }
+
 
 
 }

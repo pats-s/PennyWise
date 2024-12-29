@@ -11,5 +11,6 @@
     <string name="date_of_birth">Date Of Birth</string>
     <string name="register">Register</string>
     <string name="continue_with_google">Continue With Google</string>
+    <string name="top_spending_categories">Top Spending Categories</string>
 
 </resources>
