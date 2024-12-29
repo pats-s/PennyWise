@@ -48,9 +48,6 @@ class PennyWiseRepository private constructor(context: Context) {
             }
     }
 
-
-
-
     fun uploadPredefinedCategories(
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
@@ -81,6 +78,24 @@ class PennyWiseRepository private constructor(context: Context) {
                 onFailure(exception)
             }
     }
+
+    fun getCategoryName(
+        categoryId: String,
+        onSuccess: (String?) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("categories")
+            .document(categoryId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val category = snapshot.toObject(Category::class.java)
+                onSuccess(category?.name)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
 
     fun addTransaction(
         transaction: Transaction,
@@ -256,6 +271,41 @@ class PennyWiseRepository private constructor(context: Context) {
                 onFailure(exception)
             }
     }
+
+    fun getFilteredTransactions1(
+        day: String?,
+        startOfWeekOrMonth: String?,
+        endOfWeek: String?,
+        onSuccess: (List<Transaction>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val transactionsCollection = firestore.collection("transactions")
+        var query: Query = transactionsCollection
+
+        when {
+            day != null -> {
+                query = query.whereEqualTo("date", day)
+            }
+            startOfWeekOrMonth != null && endOfWeek != null -> {
+                query = query
+                    .whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
+                    .whereLessThanOrEqualTo("date", endOfWeek)
+            }
+            startOfWeekOrMonth != null -> {
+                query = query.whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
+            }
+        }
+
+        query.get()
+            .addOnSuccessListener { snapshot ->
+                val transactions = snapshot.toObjects(Transaction::class.java)
+                onSuccess(transactions)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
 
 
     private fun formatDateToStandard(date: String): String {

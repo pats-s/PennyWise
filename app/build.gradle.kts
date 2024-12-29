@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.room.common)
+    implementation(libs.androidx.material3.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -88,6 +89,9 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation (libs.androidx.lifecycle.viewmodel.ktx) // Replace version with the actual one in libs.androidx.lifecycle.viewmodel.ktx
     implementation (libs.glide) // Replace version with the actual one in libs.glide
+
+
+
 
     kapt ("com.github.bumptech.glide:compiler:4.15.0")
 
