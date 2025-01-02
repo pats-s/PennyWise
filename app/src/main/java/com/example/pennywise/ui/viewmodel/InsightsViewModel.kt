@@ -72,6 +72,102 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
 
     fun fetchTopSpendingCategories(walletId: String, filterType: String, filterValue: String) {
         CoroutineScope(Dispatchers.IO).launch {
+            val (startOfPeriod, endOfPeriod) = when (filterType) {
+                "Day" -> Pair(filterValue, filterValue) // Single day
+                "Week" -> calculateStartAndEndDatesForWeek(filterValue) // Weekly range
+                "Month" -> calculateStartAndEndDatesForMonth(filterValue) // Monthly range
+                else -> Pair(null, null)
+            }
+
+            if (startOfPeriod != null && endOfPeriod != null) {
+                repository.getFilteredTransactions(
+                    day = if (filterType == "Day") filterValue else null,
+                    startOfWeekOrMonth = startOfPeriod,
+                    endOfWeek = endOfPeriod,
+                    onSuccess = { transactions ->
+                        val spendingByCategory = transactions
+                            .filter { it.type == "Expense" }
+                            .groupBy { it.categoryId }
+                            .mapValues { entry -> entry.value.sumOf { it.amount } }
+                            .toList()
+                            .sortedByDescending { it.second }
+
+                        repository.getAllCategories(
+                            onSuccess = { categoriesMap ->
+                                val categorySpendingList = spendingByCategory.map { (categoryId, amount) ->
+                                    val categoryName = categoriesMap[categoryId]?.name ?: "Unknown"
+                                    Pair(categoryName, amount)
+                                }
+                                Log.d("Filter", "FilterType: $filterType, Start: $startOfPeriod, End: $endOfPeriod")
+
+                                _spendingByCategory.postValue(categorySpendingList)
+                            },
+                            onFailure = { exception ->
+                                _errorMessage.postValue("Error fetching categories: ${exception.message}")
+                            }
+                        )
+                    },
+                    onFailure = { exception ->
+                        _errorMessage.postValue("Error fetching transactions: ${exception.message}")
+                    }
+                )
+            } else {
+                _errorMessage.postValue("Invalid date range")
+            }
+        }
+    }
+
+
+    private fun calculateStartAndEndDatesForWeek(selectedDate: String): Pair<String, String> {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+
+        // Parse the provided date
+        calendar.time = dateFormat.parse(selectedDate) ?: Date()
+
+        // Set to the start of the week
+        calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
+        val startOfWeek = dateFormat.format(calendar.time)
+
+        // Set to the end of the week
+        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        val endOfWeek = dateFormat.format(calendar.time)
+
+        // Debugging the week range
+        Log.d("WeeklyFilter", "Start: $startOfWeek, End: $endOfWeek")
+
+        return Pair(startOfWeek, endOfWeek)
+    }
+
+
+    private fun calculateStartAndEndDatesForMonth(selectedDate: String): Pair<String, String> {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+
+        // Parse the provided date
+        calendar.time = dateFormat.parse(selectedDate) ?: Date()
+
+        // Set to the start of the month
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        val startOfMonth = dateFormat.format(calendar.time)
+
+        // Set to the end of the month
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+        val endOfMonth = dateFormat.format(calendar.time)
+
+        // Debugging the month range
+        Log.d("MonthlyFilter", "Start: $startOfMonth, End: $endOfMonth")
+
+        return Pair(startOfMonth, endOfMonth)
+    }
+
+
+
+
+
+    // we were using
+    fun fetchTopSpendingCategories1(walletId: String, filterType: String, filterValue: String) {
+        CoroutineScope(Dispatchers.IO).launch {
             repository.getFilteredTransactions1(
                 day = if (filterType == "Day") filterValue else null,
                 startOfWeekOrMonth = if (filterType == "Week" || filterType == "Month") filterValue else null,

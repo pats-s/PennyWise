@@ -18,6 +18,7 @@ import com.example.pennywise.ui.adapter.CategorySpendingAdapter
 import com.example.pennywise.ui.viewmodel.InsightsViewModel
 import com.example.pennywise.ui.viewmodel.InsightsViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
+import java.util.Date
 import java.util.Locale
 
 class InsightsFragment : Fragment() {
@@ -103,36 +104,9 @@ class InsightsFragment : Fragment() {
                 val selectedDate = Calendar.getInstance()
                 selectedDate.set(year, month, dayOfMonth)
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val formattedDate = dateFormat.format(selectedDate.time)
 
-                when (filterType) {
-                    "Day" -> {
-                        val formattedDate = dateFormat.format(selectedDate.time)
-                        viewModel.fetchTopSpendingCategories(userId, "Day", formattedDate)
-                    }
-                    "Week" -> {
-                        // Fix: Set the calendar to the start of the selected week
-                        selectedDate.set(Calendar.DAY_OF_WEEK, selectedDate.firstDayOfWeek)
-                        val startOfWeek = dateFormat.format(selectedDate.time)
-
-                        // Fix: Calculate the end of the selected week
-                        val endOfWeekCalendar = selectedDate.clone() as Calendar
-                        endOfWeekCalendar.add(Calendar.DAY_OF_WEEK, 6)
-                        val endOfWeek = dateFormat.format(endOfWeekCalendar.time)
-
-                        // Pass start and end of the week
-                        viewModel.fetchTopSpendingCategories(userId, "Week", startOfWeek)
-                    }
-                    "Month" -> {
-                        selectedDate.set(Calendar.DAY_OF_MONTH, 1) // Start of the month
-                        val startOfMonth = dateFormat.format(selectedDate.time)
-
-                        selectedDate.set(Calendar.DAY_OF_MONTH, selectedDate.getActualMaximum(Calendar.DAY_OF_MONTH)) // End of the month
-                        val endOfMonth = dateFormat.format(selectedDate.time)
-
-                        // Pass start and end of the month
-                        viewModel.fetchTopSpendingCategories(userId, "Month", startOfMonth)
-                    }
-                }
+                viewModel.fetchTopSpendingCategories(userId, filterType, formattedDate)
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -140,6 +114,47 @@ class InsightsFragment : Fragment() {
         )
         datePickerDialog.show()
     }
+
+
+
+    private fun calculateStartAndEndDatesForWeek(selectedDate: String): Pair<String, String> {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+
+        // Parse the provided date
+        calendar.time = dateFormat.parse(selectedDate) ?: Date()
+
+        // Set to the start of the week
+        calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
+        val startOfWeek = dateFormat.format(calendar.time)
+
+        // Set to the end of the week
+        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        val endOfWeek = dateFormat.format(calendar.time)
+
+        return Pair(startOfWeek, endOfWeek)
+    }
+
+    private fun calculateStartAndEndDatesForMonth(selectedDate: String): Pair<String, String> {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+
+        // Parse the provided date
+        calendar.time = dateFormat.parse(selectedDate) ?: Date()
+
+        // Set to the start of the month
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        val startOfMonth = dateFormat.format(calendar.time)
+
+        // Set to the end of the month
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+        val endOfMonth = dateFormat.format(calendar.time)
+
+        return Pair(startOfMonth, endOfMonth)
+    }
+
+
+
 
 
     // Get the filter value based on the filter type

@@ -272,6 +272,9 @@ class PennyWiseRepository private constructor(context: Context) {
             }
     }
 
+
+
+
     fun getFilteredTransactions1(
         day: String?,
         startOfWeekOrMonth: String?,
@@ -282,29 +285,65 @@ class PennyWiseRepository private constructor(context: Context) {
         val transactionsCollection = firestore.collection("transactions")
         var query: Query = transactionsCollection
 
-        when {
-            day != null -> {
-                query = query.whereEqualTo("date", day)
-            }
-            startOfWeekOrMonth != null && endOfWeek != null -> {
-                query = query
+        try {
+            query = when {
+                day != null -> query.whereEqualTo("date", day)
+                startOfWeekOrMonth != null && endOfWeek != null -> query
                     .whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
                     .whereLessThanOrEqualTo("date", endOfWeek)
+                else -> query
             }
-            startOfWeekOrMonth != null -> {
-                query = query.whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
-            }
-        }
 
-        query.get()
-            .addOnSuccessListener { snapshot ->
-                val transactions = snapshot.toObjects(Transaction::class.java)
-                onSuccess(transactions)
-            }
-            .addOnFailureListener { exception ->
-                onFailure(exception)
-            }
+            query.get()
+                .addOnSuccessListener { snapshot ->
+                    val transactions = snapshot.toObjects(Transaction::class.java)
+                    onSuccess(transactions)
+                }
+                .addOnFailureListener { exception ->
+                    onFailure(exception)
+                }
+        } catch (e: Exception) {
+            onFailure(e)
+        }
     }
+
+
+
+
+    //we were using
+    fun getFilteredTransactions2(
+        day: String?,
+        startOfWeekOrMonth: String?,
+        endOfWeek: String?,
+        onSuccess: (List<Transaction>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val transactionsCollection = firestore.collection("transactions")
+        var query: Query = transactionsCollection
+
+        try {
+            query = when {
+                day != null -> query.whereEqualTo("date", day)
+                startOfWeekOrMonth != null && endOfWeek != null -> query
+                    .whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
+                    .whereLessThanOrEqualTo("date", endOfWeek)
+                startOfWeekOrMonth != null -> query.whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
+                else -> query
+            }
+
+            query.get()
+                .addOnSuccessListener { snapshot ->
+                    val transactions = snapshot.toObjects(Transaction::class.java)
+                    onSuccess(transactions)
+                }
+                .addOnFailureListener { exception ->
+                    onFailure(exception)
+                }
+        } catch (e: Exception) {
+            onFailure(e)
+        }
+    }
+
 
 
 
