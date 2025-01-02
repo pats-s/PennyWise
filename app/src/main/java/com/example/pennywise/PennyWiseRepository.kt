@@ -187,6 +187,42 @@ class PennyWiseRepository private constructor(context: Context) {
     }
 
 
+    //for a single user
+    fun getTodayTransactionsForUser(
+        userId: String,
+        onSuccess: (List<Transaction>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        // Format today's date to match Firestore format
+        val today = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+
+        // Fetch user data to get the wallet ID
+        getUserData(userId, onSuccess = { user ->
+            val walletId = user.walletId
+
+            // Query transactions for the wallet and today's date
+            firestore.collection("transactions")
+                .whereEqualTo("walletId", walletId)
+                .whereEqualTo("date", today)
+                .get()
+                .addOnSuccessListener { result ->
+                    val transactions = result.documents.mapNotNull { it.toObject(Transaction::class.java) }
+                    onSuccess(transactions)
+                }
+                .addOnFailureListener { exception ->
+                    onFailure(exception)
+                }
+        }, onFailure = { exception ->
+            onFailure(exception)
+        })
+    }
+
+
+
+
+
+
+    //jane
     fun getTodayTransactions(
         onSuccess: (List<Transaction>) -> Unit,
         onFailure: (Exception) -> Unit
@@ -237,7 +273,28 @@ class PennyWiseRepository private constructor(context: Context) {
             }
         }
     }
+    val firebaseFirestore = FirebaseFirestore.getInstance()
+    //for the logged in user only
+    fun getTransactionsForWallet(
+        walletId: String,
+        onSuccess: (List<Transaction>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        // Assuming transactions are stored in a Firebase collection
+        val transactionsRef = firebaseFirestore.collection("transactions")
+        transactionsRef.whereEqualTo("walletId", walletId).get()
+            .addOnSuccessListener { snapshot ->
+                val transactions = snapshot.toObjects(Transaction::class.java)
+                onSuccess(transactions)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
 
+
+
+    //jane
     fun getFilteredTransactions(
         day: String?,
         startOfWeekOrMonth: String?,
@@ -274,8 +331,9 @@ class PennyWiseRepository private constructor(context: Context) {
 
 
 
-
+    //tried to do it today
     fun getFilteredTransactions1(
+        walletId: String,
         day: String?,
         startOfWeekOrMonth: String?,
         endOfWeek: String?,

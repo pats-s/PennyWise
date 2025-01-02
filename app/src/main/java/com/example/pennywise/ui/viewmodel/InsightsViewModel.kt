@@ -44,8 +44,12 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
         }
     }
 
+
+
+    //for a single user
+
     private fun fetchTransactionsAndCalculateScore(walletId: String) {
-        repository.getTransactions(
+        repository.getTransactionsForWallet(walletId,
             onSuccess = { transactions ->
                 val totalIncome = transactions.filter { it.type == "Income" }.sumOf { it.amount }
                 val totalExpense = transactions.filter { it.type == "Expense" }.sumOf { it.amount }
@@ -69,8 +73,37 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
     }
 
 
+    // jane
+   /* private fun fetchTransactionsAndCalculateScore(walletId: String) {
+        repository.getTransactions(
+            onSuccess = { transactions ->
+                val totalIncome = transactions.filter { it.type == "Income" }.sumOf { it.amount }
+                val totalExpense = transactions.filter { it.type == "Expense" }.sumOf { it.amount }
 
-    fun fetchTopSpendingCategories(walletId: String, filterType: String, filterValue: String) {
+                _totalIncome.postValue(totalIncome)
+                _totalExpense.postValue(totalExpense)
+
+                val score = if (totalIncome > 0) {
+                    val ratio = (totalIncome - totalExpense) / totalIncome * 100
+                    ratio.coerceIn(0.0, 100.0).toInt()
+                } else {
+                    0
+                }
+
+                _financialHealthScore.postValue(score)
+            },
+            onFailure = { exception ->
+                _errorMessage.postValue("Error fetching transactions: ${exception.message}")
+            }
+        )
+    }*/
+
+
+
+    fun fetchTopSpendingCategories(walletId: String?, filterType: String, filterValue: String) {
+        if (walletId != null) {
+            Log.d("WALLET ID",walletId)
+        }
         CoroutineScope(Dispatchers.IO).launch {
             val (startOfPeriod, endOfPeriod) = when (filterType) {
                 "Day" -> Pair(filterValue, filterValue) // Single day
@@ -80,37 +113,42 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
             }
 
             if (startOfPeriod != null && endOfPeriod != null) {
-                repository.getFilteredTransactions(
-                    day = if (filterType == "Day") filterValue else null,
-                    startOfWeekOrMonth = startOfPeriod,
-                    endOfWeek = endOfPeriod,
-                    onSuccess = { transactions ->
-                        val spendingByCategory = transactions
-                            .filter { it.type == "Expense" }
-                            .groupBy { it.categoryId }
-                            .mapValues { entry -> entry.value.sumOf { it.amount } }
-                            .toList()
-                            .sortedByDescending { it.second }
+                if (walletId != null) {
+                    repository.getFilteredTransactions1(
+                        walletId = walletId,
+                        day = if (filterType == "Day") filterValue else null,
+                        startOfWeekOrMonth = startOfPeriod,
+                        endOfWeek = endOfPeriod,
+                        onSuccess = { transactions ->
 
-                        repository.getAllCategories(
-                            onSuccess = { categoriesMap ->
-                                val categorySpendingList = spendingByCategory.map { (categoryId, amount) ->
-                                    val categoryName = categoriesMap[categoryId]?.name ?: "Unknown"
-                                    Pair(categoryName, amount)
+                            val spendingByCategory = transactions
+                                .filter { it.type == "Expense" }
+                                .filter { it.walletId == walletId }
+                                .groupBy { it.categoryId }
+                                .mapValues { entry -> entry.value.sumOf { it.amount } }
+                                .toList()
+                                .sortedByDescending { it.second }
+
+                            repository.getAllCategories(
+                                onSuccess = { categoriesMap ->
+                                    val categorySpendingList = spendingByCategory.map { (categoryId, amount) ->
+                                        val categoryName = categoriesMap[categoryId]?.name ?: "Unknown"
+                                        Pair(categoryName, amount)
+                                    }
+                                    Log.d("Filter", "FilterType: $filterType, Start: $startOfPeriod, End: $endOfPeriod")
+
+                                    _spendingByCategory.postValue(categorySpendingList)
+                                },
+                                onFailure = { exception ->
+                                    _errorMessage.postValue("Error fetching categories: ${exception.message}")
                                 }
-                                Log.d("Filter", "FilterType: $filterType, Start: $startOfPeriod, End: $endOfPeriod")
-
-                                _spendingByCategory.postValue(categorySpendingList)
-                            },
-                            onFailure = { exception ->
-                                _errorMessage.postValue("Error fetching categories: ${exception.message}")
-                            }
-                        )
-                    },
-                    onFailure = { exception ->
-                        _errorMessage.postValue("Error fetching transactions: ${exception.message}")
-                    }
-                )
+                            )
+                        },
+                        onFailure = { exception ->
+                            _errorMessage.postValue("Error fetching transactions: ${exception.message}")
+                        }
+                    )
+                }
             } else {
                 _errorMessage.postValue("Invalid date range")
             }
@@ -169,6 +207,7 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
     fun fetchTopSpendingCategories1(walletId: String, filterType: String, filterValue: String) {
         CoroutineScope(Dispatchers.IO).launch {
             repository.getFilteredTransactions1(
+                walletId = walletId,
                 day = if (filterType == "Day") filterValue else null,
                 startOfWeekOrMonth = if (filterType == "Week" || filterType == "Month") filterValue else null,
                 endOfWeek = if (filterType == "Week") calculateEndOfWeek(filterValue) else null,

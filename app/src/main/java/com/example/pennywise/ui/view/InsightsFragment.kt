@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +21,7 @@ import com.example.pennywise.ui.viewmodel.InsightsViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 import java.util.Date
 import java.util.Locale
+import com.google.firebase.firestore.FirebaseFirestore
 
 class InsightsFragment : Fragment() {
 
@@ -45,6 +47,7 @@ class InsightsFragment : Fragment() {
         if (loggedInUserId != null) {
             viewModel.calculateFinancialHealthScore(loggedInUserId)
 //            viewModel.fetchTopSpendingCategories(loggedInUserId)
+
             setupFilter(loggedInUserId)
         }
 
@@ -106,7 +109,19 @@ class InsightsFragment : Fragment() {
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 val formattedDate = dateFormat.format(selectedDate.time)
 
-                viewModel.fetchTopSpendingCategories(userId, filterType, formattedDate)
+
+                val firestore = FirebaseFirestore.getInstance()
+                firestore.collection("users").document(userId).get()
+                    .addOnSuccessListener { document ->
+                        val walletId = document.getString("walletId") // Ensure this matches your Firestore schema
+                        if (walletId != null) {
+                            viewModel.fetchTopSpendingCategories(walletId, filterType, formattedDate)
+                        }
+                    }
+
+
+
+
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),

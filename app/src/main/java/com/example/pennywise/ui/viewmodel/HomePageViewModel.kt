@@ -119,7 +119,8 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
                     repository.addTransaction(transaction, onSuccess = {
                         repository.updateWalletBalance(user.walletId, updatedBalance, onSuccess = {
                             _walletBalance.postValue(updatedBalance)
-                            fetchTodayTransactions()
+                            //fetchTodayTransactions()
+                            fetchTodayUserTransactions() // for the logged in user only
                         }, onFailure = {
                             _errorMessage.postValue("Failed to update wallet balance!")
                         })
@@ -150,6 +151,59 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
 
 
 
+
+
+
+
+    fun fetchUserTransactions() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
+        if (currentUser != null) {
+            val userId = currentUser.uid
+
+            // Fetch user data to get the wallet ID
+            repository.getUserData(userId, onSuccess = { user ->
+                val walletId = user.walletId
+
+                // Fetch transactions for the wallet
+                repository.getTransactionsForWallet(walletId, onSuccess = { transactions ->
+                    _pastTransactions.postValue(transactions) // Update LiveData
+                }, onFailure = { exception ->
+                    _errorMessage.postValue("Failed to fetch transactions: ${exception.message}")
+                })
+            }, onFailure = { exception ->
+                _errorMessage.postValue("Failed to fetch user data: ${exception.message}")
+            })
+        } else {
+            _errorMessage.postValue("No user is logged in.")
+        }
+    }
+
+    //for a single user
+    fun fetchTodayUserTransactions() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
+        if (currentUser != null) {
+            val userId = currentUser.uid
+
+            repository.getTodayTransactionsForUser(
+                userId = userId,
+                onSuccess = { transactions ->
+                    _todayTransactions.postValue(transactions) // Update LiveData with today's transactions
+                },
+                onFailure = { exception ->
+                    _errorMessage.postValue("Failed to fetch today's transactions: ${exception.message}")
+                }
+            )
+        } else {
+            _errorMessage.postValue("No user is logged in.")
+        }
+    }
+
+
+
+
+    //janee
     fun fetchTodayTransactions() {
         repository.getTodayTransactions(
             onSuccess = { transactions ->

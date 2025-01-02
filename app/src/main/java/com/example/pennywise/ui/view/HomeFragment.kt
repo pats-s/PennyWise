@@ -99,7 +99,8 @@ class HomeFragment : Fragment() {
         }
 
 
-        homePageViewModel.fetchTodayTransactions()
+        //homePageViewModel.fetchTodayTransactions()
+        homePageViewModel.fetchTodayUserTransactions()
         // Add click listener for View All button
         binding.btnViewAll.setOnClickListener {
             navigateToPastTransactions()
@@ -312,7 +313,8 @@ class HomeFragment : Fragment() {
 
 
     private fun loadInitialData() {
-        homePageViewModel.fetchTodayTransactions()
+        //homePageViewModel.fetchTodayTransactions()
+        homePageViewModel.fetchTodayUserTransactions()
         homePageViewModel.fetchSavingGoals(currentUserWalletId)
         homePageViewModel.fetchCategoriesForMapping()
     }
