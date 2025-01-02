@@ -63,7 +63,8 @@ class PastTransactionsFragment : Fragment() {
         observeViewModel()
 
         homePageViewModel.fetchCategoriesForMapping()
-        homePageViewModel.fetchPastTransactions()
+        //homePageViewModel.fetchPastTransactions()
+        homePageViewModel.fetchUserTransactions()
 
     }
 
