@@ -14,7 +14,33 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     val registrationStatus = MutableLiveData<String>()
     val googleSignInStatus = MutableLiveData<String>()
 
+
+
     fun registerUser(email: String, password: String, firstname: String, lastname: String, dob: String) {
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = FirebaseAuth.getInstance().currentUser
+                    user?.sendEmailVerification()?.addOnCompleteListener { emailTask ->
+                        if (emailTask.isSuccessful) {
+                            val userId = user.uid
+                            saveAdditionalData(userId, firstname, lastname, email, hashPassword(password), dob)
+                            registrationStatus.value = "Registration successful. Please check your email to verify your account."
+                        } else {
+                            registrationStatus.value = "Failed to send verification email: ${emailTask.exception?.message}"
+                        }
+                    }
+                } else {
+                    registrationStatus.value = "Registration failed: ${task.exception?.message}"
+                }
+            }
+    }
+
+
+
+
+    // was usign before email verification
+    fun registerUser1(email: String, password: String, firstname: String, lastname: String, dob: String) {
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
