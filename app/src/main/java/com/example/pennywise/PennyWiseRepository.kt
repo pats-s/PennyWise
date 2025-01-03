@@ -460,6 +460,8 @@ class PennyWiseRepository private constructor(context: Context) {
         onFailure: (Exception) -> Unit
     ) {
         if (walletId.isEmpty()) {
+            println("invalid wallet ID")
+            println(walletId)
             onFailure(Exception("Invalid wallet ID"))
             return
         }
@@ -509,6 +511,7 @@ class PennyWiseRepository private constructor(context: Context) {
 
     fun deductBillAmount(
         bill: Bill,
+        walletId: String, ////////////// solution//////////
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
@@ -524,7 +527,7 @@ class PennyWiseRepository private constructor(context: Context) {
             if (wallet.balance >= bill.amount) {
                 val newBalance = wallet.balance - bill.amount
                 println("New Wallet Balance: $newBalance")
-                updateWalletBalance(wallet.walletId, newBalance, onSuccess, onFailure)
+                updateWalletBalance(walletId, newBalance, onSuccess, onFailure)
             } else {
                 onFailure(Exception("Insufficient balance"))
             }
