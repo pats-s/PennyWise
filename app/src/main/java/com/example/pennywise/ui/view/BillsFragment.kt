@@ -10,8 +10,9 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.pennywise.PennyWiseRepository
 import com.example.pennywise.R
@@ -20,10 +21,11 @@ import com.example.pennywise.remote.Bill
 import com.example.pennywise.ui.adapter.BillAdapter
 import com.example.pennywise.ui.viewmodel.BillsViewModel
 import com.example.pennywise.ui.viewmodel.BillsViewModelFactory
+import com.example.pennywise.ui.viewmodel.HomePageViewModel
+import com.example.pennywise.ui.viewmodel.HomePageViewModelFactory
+import com.example.pennywise.ui.viewmodel.SharedViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.Calendar
 import java.util.UUID
 
@@ -33,6 +35,7 @@ class BillsFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var viewModel: BillsViewModel
     private lateinit var billAdapter: BillAdapter
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,10 +52,21 @@ class BillsFragment : Fragment() {
         viewModel = ViewModelProvider(this, BillsViewModelFactory(repository))
             .get(BillsViewModel::class.java)
 
+
+
+
         // Initialize the adapter with the debug log
         billAdapter = BillAdapter(emptyList()) { bill ->
             println("Bill Wallet ID: ${bill.walletId}")
             viewModel.payBill(bill)
+            repository.getWallet(bill.walletId, onSuccess = { wallet ->
+                sharedViewModel.updateWalletBalance(wallet.balance)
+                println("wallet balance (shared view model)" + wallet.balance)
+            }, onFailure = { exception ->
+
+            })
+
+
         }
 
 
@@ -84,7 +98,10 @@ class BillsFragment : Fragment() {
         }
 
 
+
     }
+
+
 
 
     private fun showAddBillDialog() {

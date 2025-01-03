@@ -1,15 +1,16 @@
 package com.example.pennywise
 
 import android.content.Context
+import androidx.fragment.app.activityViewModels
 import com.example.pennywise.api.RetrofitInstance
 import com.example.pennywise.local.dao.AppSettingsDao
-import com.example.pennywise.local.entities.AppSettingsEntity
 import com.example.pennywise.local.predefinedCategories
 import com.example.pennywise.remote.Category
 import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.remote.Transaction
 import com.example.pennywise.remote.User
 import com.example.pennywise.remote.Wallet
+import com.example.pennywise.ui.viewmodel.SharedViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +26,8 @@ class PennyWiseRepository private constructor(context: Context) {
 
     private val appSettingsDao: AppSettingsDao
     private val firestore = FirebaseFirestore.getInstance()
+    //private val sharedViewModel: SharedViewModel by activityViewModels()
+
 
     init {
         val database = PennyWiseDatabase.getDatabase(context)

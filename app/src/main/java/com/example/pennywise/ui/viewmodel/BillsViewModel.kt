@@ -12,6 +12,7 @@ class BillsViewModel(private val repository: PennyWiseRepository) : ViewModel() 
     private val _bills = MutableLiveData<List<Bill>>()
     val bills: LiveData<List<Bill>> get() = _bills
 
+
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
