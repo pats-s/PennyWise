@@ -5,6 +5,7 @@ import com.example.pennywise.api.RetrofitInstance
 import com.example.pennywise.local.dao.AppSettingsDao
 import com.example.pennywise.local.entities.AppSettingsEntity
 import com.example.pennywise.local.predefinedCategories
+import com.example.pennywise.remote.Bill
 import com.example.pennywise.remote.Category
 import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.remote.Transaction
@@ -216,11 +217,6 @@ class PennyWiseRepository private constructor(context: Context) {
             onFailure(exception)
         })
     }
-
-
-
-
-
 
     //jane
     fun getTodayTransactions(
@@ -435,6 +431,11 @@ class PennyWiseRepository private constructor(context: Context) {
         onSuccess: (Wallet) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        if (walletId.isEmpty()) {
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
         firestore.collection("wallets")
             .document(walletId)
             .get()
@@ -451,22 +452,90 @@ class PennyWiseRepository private constructor(context: Context) {
             }
     }
 
+
     fun updateWalletBalance(
         walletId: String,
         newBalance: Double,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        if (walletId.isEmpty()) {
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
         firestore.collection("wallets")
             .document(walletId)
             .update("balance", newBalance)
             .addOnSuccessListener {
+                println("Wallet balance updated successfully.")
                 onSuccess()
             }
             .addOnFailureListener { exception ->
+                println("Failed to update wallet balance: ${exception.message}")
                 onFailure(exception)
             }
+
     }
+
+
+    //BILL REMINDERS FEATURE
+    fun addBill(
+        bill: Bill,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("bills")
+            .document(bill.id)
+            .set(bill)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure(it) }
+    }
+
+    fun getBills(
+        walletId: String,
+        onSuccess: (List<Bill>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("bills")
+            .whereEqualTo("walletId", walletId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val bills = snapshot.toObjects(Bill::class.java)
+                onSuccess(bills)
+            }
+            .addOnFailureListener { onFailure(it) }
+    }
+
+    fun deductBillAmount(
+        bill: Bill,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        if (bill.walletId.isEmpty()) {
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
+        println("Attempting to deduct bill. Wallet ID: ${bill.walletId}, Amount: ${bill.amount}")
+
+        getWallet(bill.walletId, onSuccess = { wallet ->
+            println("Current Wallet Balance: ${wallet.balance}")
+            if (wallet.balance >= bill.amount) {
+                val newBalance = wallet.balance - bill.amount
+                println("New Wallet Balance: $newBalance")
+                updateWalletBalance(wallet.walletId, newBalance, onSuccess, onFailure)
+            } else {
+                onFailure(Exception("Insufficient balance"))
+            }
+        }, onFailure = { exception ->
+            println("Failed to fetch wallet: ${exception.message}")
+            onFailure(exception)
+        })
+    }
+
+
+
 
 
 }

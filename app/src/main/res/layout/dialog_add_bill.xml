@@ -1,0 +1,29 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/etBillName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Bill Name" />
+
+    <EditText
+        android:id="@+id/etBillAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Amount"
+        android:inputType="numberDecimal" />
+
+    <TextView
+        android:id="@+id/tvBillDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Payment Date"
+        android:padding="8dp"
+        android:background="@android:drawable/edit_text"
+        android:textColorHint="@color/primaryDark" />
+</LinearLayout>

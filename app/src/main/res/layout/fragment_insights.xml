@@ -124,6 +124,4 @@
         tools:listitem="@layout/item_category_spending" />
 
 
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
