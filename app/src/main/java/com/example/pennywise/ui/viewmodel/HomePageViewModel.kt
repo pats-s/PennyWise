@@ -5,14 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.pennywise.PennyWiseRepository
-import com.example.pennywise.local.entities.AppSettingsEntity
 import com.example.pennywise.remote.Category
 import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.remote.Transaction
-import com.example.pennywise.remote.User
-import com.example.pennywise.remote.Wallet
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
@@ -22,7 +18,7 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
     private val _userName = MutableLiveData<String>()
     val userName: LiveData<String> get() = _userName
 
-    private val _walletBalance = MutableLiveData<Double>()
+     val _walletBalance = MutableLiveData<Double>()
     val walletBalance: LiveData<Double> get() = _walletBalance
 
     private val _categories = MutableLiveData<List<Category>>()
@@ -53,7 +49,7 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
     }
 
 
-    private fun fetchUserData() {
+     fun fetchUserData() {
         val currentUser = FirebaseAuth.getInstance().currentUser
 
         if (currentUser != null) {

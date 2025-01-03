@@ -36,18 +36,23 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import com.example.pennywise.local.entities.AppSettingsEntity
 import kotlinx.coroutines.launch
 import androidx.room.Room
 import androidx.lifecycle.lifecycleScope
 import com.example.pennywise.PennyWiseDatabase
+import com.example.pennywise.ui.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomepageBinding? = null
     private val binding get() = _binding!!
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+
 
     // Lazy initialization of ViewModel
     private val homePageViewModel: HomePageViewModel by viewModels {
@@ -88,6 +93,10 @@ class HomeFragment : Fragment() {
         fetchAndSetWelcomeMessage()
 
         observeViewModel()
+        sharedViewModel.walletBalance.observe(viewLifecycleOwner) { balance ->
+            binding.tvTotalBalance.text = "$${String.format("%.2f", balance)}"
+        }
+
 
         // Add click listener for Add Transaction button
         binding.btnAddTransaction.setOnClickListener {
@@ -124,6 +133,9 @@ class HomeFragment : Fragment() {
             val intent = Intent(requireContext(), ProfileActivity::class.java)
             startActivity(intent)
         }
+
+
+
 
     }
 
