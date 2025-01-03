@@ -57,13 +57,22 @@ class RegisterActivity : AppCompatActivity() {
         googleSignInButton = findViewById(R.id.googleSignInButton)
 
         // Observe registration status
-        registerViewModel.registrationStatus.observe(this, Observer { status ->
+        /*registerViewModel.registrationStatus.observe(this, Observer { status ->
             Toast.makeText(this, status, Toast.LENGTH_LONG).show()
             if (status == "Registration successful") {
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             }
+        })*/
+
+
+        registerViewModel.registrationStatus.observe(this, Observer { status ->
+            Toast.makeText(this, status, Toast.LENGTH_LONG).show()
+            if (status.startsWith("Registration successful")) {
+                checkEmailVerification()
+            }
         })
+
 
         //Observe Google Sign-In status
         registerViewModel.googleSignInStatus.observe(this, Observer { status ->
@@ -109,6 +118,39 @@ class RegisterActivity : AppCompatActivity() {
             startActivityForResult(signInIntent, 1001)
         }
     }
+
+    private var hasShownVerificationMessage = false // Flag to ensure message is shown once
+
+    private fun checkEmailVerification() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
+        if (currentUser != null) {
+            // Periodically check for email verification
+            val handler = android.os.Handler()
+            val runnable = object : Runnable {
+                override fun run() {
+                    currentUser.reload().addOnCompleteListener {
+                        if (currentUser.isEmailVerified) {
+                            Toast.makeText(this@RegisterActivity, "Email verified. Redirecting to main activity...", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this@RegisterActivity, MainActivity::class.java))
+                            finish()
+                        } else {
+                            if (!hasShownVerificationMessage) {
+                                hasShownVerificationMessage = true // Set the flag
+                                Toast.makeText(this@RegisterActivity, "Please verify your email to proceed.", Toast.LENGTH_SHORT).show()
+                            }
+                            handler.postDelayed(this, 5000) // Check every 5 seconds
+                        }
+                    }
+                }
+            }
+            handler.post(runnable)
+        } else {
+            Toast.makeText(this, "Error: No user found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
 
     private fun showDatePickerDialog() {
         val calendar = Calendar.getInstance()

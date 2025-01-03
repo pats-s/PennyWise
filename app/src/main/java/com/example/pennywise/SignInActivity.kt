@@ -43,7 +43,8 @@ class SignInActivity : AppCompatActivity() {
             val currentUser = firebaseAuth.currentUser
             if (currentUser != null) {
                 // Call function to update password in Firestore
-                updatePasswordInFirestore(currentUser.uid)
+                //updatePasswordInFirestore(currentUser.uid)
+                //??//
             }
         }
 
@@ -77,7 +78,7 @@ class SignInActivity : AppCompatActivity() {
             signInViewModel.signIn(email, password)
         }
 
-        // Observe the sign-in result
+        // Observe the sign-in result FOR THE ACTIVITY SIGN IN
 //        signInViewModel.signInResult.observe(this, Observer { result ->
 //            result.onSuccess { message ->
 //                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
@@ -89,6 +90,11 @@ class SignInActivity : AppCompatActivity() {
 //            }
 //        })
 
+
+
+
+
+        // was using this before email verification for the fragment sign in
         signInViewModel.signInResult.observe(this, Observer { result ->
             result.onSuccess { message ->
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show()
@@ -97,6 +103,20 @@ class SignInActivity : AppCompatActivity() {
                 Toast.makeText(this, exception.message, Toast.LENGTH_SHORT).show()
             }
         })
+
+
+
+
+        //after sign in email verification
+        /*signInViewModel.signInResult.observe(this, Observer { result ->
+            result.onSuccess { message ->
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                navigateToMainActivity()
+            }.onFailure { exception ->
+                Toast.makeText(this, exception.message, Toast.LENGTH_SHORT).show()
+            }
+        })*/
+
     }
     override fun onStart() {
         super.onStart()
