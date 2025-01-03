@@ -25,11 +25,11 @@ class BillsViewModel(private val repository: PennyWiseRepository) : ViewModel() 
     }
 
     fun deductBill(bill: Bill) {
-        repository.deductBillAmount(bill, { fetchBills(bill.walletId) }, { /* Handle Error */ })
+        repository.deductBillAmount(bill, bill.walletId,{ fetchBills(bill.walletId) }, { /* Handle Error */ })
     }
 
     fun payBill(bill: Bill) {
-        repository.deductBillAmount(bill, {
+        repository.deductBillAmount(bill, bill.walletId,{
             fetchBills(bill.walletId)
         }, { exception ->
             _errorMessage.postValue(exception.message ?: "An error occurred")
