@@ -26,7 +26,9 @@ import com.example.pennywise.ui.viewmodel.HomePageViewModelFactory
 import com.example.pennywise.ui.viewmodel.SharedViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 import java.util.UUID
 
 class BillsFragment : Fragment() {
@@ -58,16 +60,21 @@ class BillsFragment : Fragment() {
         // Initialize the adapter with the debug log
         billAdapter = BillAdapter(emptyList()) { bill ->
             println("Bill Wallet ID: ${bill.walletId}")
-            viewModel.payBill(bill)
-            repository.getWallet(bill.walletId, onSuccess = { wallet ->
-                sharedViewModel.updateWalletBalance(wallet.balance)
-                println("wallet balance (shared view model)" + wallet.balance)
+
+            // Deduct bill amount and update Firestore
+            viewModel.payBill(bill, onSuccess = {
+                // Fetch the updated wallet balance only after successful deduction
+                repository.getWallet(bill.walletId, onSuccess = { wallet ->
+                    sharedViewModel.updateWalletBalance(wallet.balance)
+                    println("Updated wallet balance (shared view model): ${wallet.balance}")
+                }, onFailure = { exception ->
+                    println("Failed to fetch updated wallet: ${exception.message}")
+                })
             }, onFailure = { exception ->
-
+                println("Failed to pay bill: ${exception.message}")
             })
-
-
         }
+
 
 
         binding.rvBills.apply {
@@ -78,6 +85,22 @@ class BillsFragment : Fragment() {
         binding.btnAddBill.setOnClickListener { showAddBillDialog() }
 
         viewModel.bills.observe(viewLifecycleOwner) { bills ->
+            val today = getTodayDate()
+
+            bills.forEach { bill ->
+                if(bill.paymentDate == today){
+                    repository.getWallet(bill.walletId, onSuccess = {wallet ->
+                        if (wallet.balance >= bill.amount){
+                            viewModel.deductBill(bill)
+                            Toast.makeText(requireContext(), "Bill '${bill.name}', paid automatically", Toast.LENGTH_SHORT).show()
+                        }else{
+                            Toast.makeText(requireContext(), "Insufficient balance for bill '${bill.name}'. Please pay manually later", Toast.LENGTH_SHORT).show()
+                        }
+                    }, onFailure = {exception ->
+                        Toast.makeText(requireContext(), "Error fetching wallet: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    })
+                }
+            }
             billAdapter.updateBills(bills)
         }
 
@@ -97,11 +120,14 @@ class BillsFragment : Fragment() {
             }
         }
 
-
-
     }
 
 
+    private fun getTodayDate(): String {
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
+        return dateFormat.format(calendar.time)
+    }
 
 
     private fun showAddBillDialog() {
