@@ -9,6 +9,7 @@ import com.example.pennywise.PennyWiseRepository
 import com.example.pennywise.remote.Category
 import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.remote.Transaction
+import com.example.pennywise.remote.Wallet
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.Locale

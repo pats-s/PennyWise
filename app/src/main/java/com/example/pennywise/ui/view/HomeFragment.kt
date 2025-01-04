@@ -43,6 +43,7 @@ import androidx.room.Room
 import androidx.lifecycle.lifecycleScope
 import com.example.pennywise.PennyWiseDatabase
 import kotlinx.coroutines.launch
+import com.example.pennywise.remote.Wallet
 
 class HomeFragment : Fragment() {
 
@@ -417,7 +418,7 @@ class HomeFragment : Fragment() {
             }
 
             // Fetch wallet details to validate balance
-            homePageViewModel.fetchWalletDetails(savingGoal.walletId) { wallet ->
+            homePageViewModel.fetchWalletDetails(savingGoal.walletId) { wallet: Wallet ->
                 if (wallet.balance < amountToAdd) {
                     Toast.makeText(requireContext(), "Insufficient balance in wallet", Toast.LENGTH_SHORT).show()
                     return@fetchWalletDetails

@@ -5,6 +5,7 @@ import androidx.fragment.app.activityViewModels
 import com.example.pennywise.api.RetrofitInstance
 import com.example.pennywise.local.dao.AppSettingsDao
 import com.example.pennywise.local.predefinedCategories
+import com.example.pennywise.remote.Bill
 import com.example.pennywise.remote.Category
 import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.remote.Transaction
@@ -498,6 +499,84 @@ class PennyWiseRepository private constructor(context: Context) {
             .set(savingGoal)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { exception -> onFailure(exception) }
+    }
+
+
+
+    //BILL REMINDERS FEATURE
+    fun addBill(
+        bill: Bill,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("bills")
+            .document(bill.id)
+            .set(bill)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure(it) }
+    }
+
+    fun getBills(
+        walletId: String,
+        onSuccess: (List<Bill>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("bills")
+            .whereEqualTo("walletId", walletId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val bills = snapshot.toObjects(Bill::class.java)
+                onSuccess(bills)
+            }
+            .addOnFailureListener { onFailure(it) }
+    }
+
+
+    fun deductBillAmount(
+        bill: Bill,
+        walletId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        getWallet(walletId, onSuccess = { wallet ->
+            if (wallet.balance >= bill.amount) {
+                val newBalance = wallet.balance - bill.amount
+                updateWalletBalance(walletId, newBalance, onSuccess, onFailure)
+            } else {
+                onFailure(Exception("Insufficient balance"))
+            }
+        }, onFailure = { exception ->
+            onFailure(exception)
+        })
+    }
+
+    fun updateBillAfterPayment(
+        bill : Bill,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ){
+        val updatedBill = bill.copy(
+            paid  = true,
+            paymentDate = calculateNextPayment(bill.paymentDate)
+        )
+        firestore.collection("bills")
+            .document(bill.id)
+            .set(updatedBill)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener {onFailure(it)}
+    }
+
+    private fun calculateNextPayment(currentDate : String) : String{
+        val dateFormat = SimpleDateFormat("d/M/yyyy",Locale.getDefault())
+        return try{
+            val date = dateFormat.parse(currentDate)
+            val calendar = Calendar.getInstance()
+            calendar.time = date
+            calendar.add(Calendar.DAY_OF_MONTH,30)
+            dateFormat.format(calendar.time)
+        }catch (e : Exception){
+            currentDate
+        }
     }
 
 
