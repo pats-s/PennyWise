@@ -429,12 +429,16 @@ class PennyWiseRepository private constructor(context: Context) {
         return SimpleDateFormat("d/M/yyyy", Locale.getDefault()).format(calendar.time)
     }
 
-
     fun getWallet(
         walletId: String,
-        onSuccess: (Wallet) -> Unit,
+        onSuccess: (Wallet) -> Unit ,
         onFailure: (Exception) -> Unit
     ) {
+        if (walletId.isEmpty()) {
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
         firestore.collection("wallets")
             .document(walletId)
             .get()
@@ -451,21 +455,33 @@ class PennyWiseRepository private constructor(context: Context) {
             }
     }
 
+
     fun updateWalletBalance(
         walletId: String,
         newBalance: Double,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        if (walletId.isEmpty()) {
+            println("invalid wallet ID")
+            println(walletId)
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
         firestore.collection("wallets")
             .document(walletId)
             .update("balance", newBalance)
             .addOnSuccessListener {
+                println("Wallet balance updated successfully.")
+                //sharedViewModel.updateWalletBalance(wallet.balance)
                 onSuccess()
             }
             .addOnFailureListener { exception ->
+                println("Failed to update wallet balance: ${exception.message}")
                 onFailure(exception)
             }
+
     }
 
     fun updateSavingGoal(
