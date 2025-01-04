@@ -20,6 +20,7 @@ class BillAdapter(
 
             binding.btnDeduct.setOnClickListener {
                 onPayNowClicked(bill)
+
             }
         }
     }

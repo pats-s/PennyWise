@@ -1,6 +1,7 @@
 package com.example.pennywise
 
 import android.content.Context
+import android.content.ReceiverCallNotAllowedException
 import androidx.fragment.app.activityViewModels
 import com.example.pennywise.api.RetrofitInstance
 import com.example.pennywise.local.dao.AppSettingsDao
@@ -529,6 +530,35 @@ class PennyWiseRepository private constructor(context: Context) {
         }, onFailure = { exception ->
             onFailure(exception)
         })
+    }
+
+    fun updateBillAfterPayment(
+        bill : Bill,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ){
+        val updatedBill = bill.copy(
+            paid  = true,
+            paymentDate = calculateNextPayment(bill.paymentDate)
+        )
+        firestore.collection("bills")
+            .document(bill.id)
+            .set(updatedBill)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener {onFailure(it)}
+    }
+
+    private fun calculateNextPayment(currentDate : String) : String{
+        val dateFormat = SimpleDateFormat("d/M/yyyy",Locale.getDefault())
+        return try{
+            val date = dateFormat.parse(currentDate)
+            val calendar = Calendar.getInstance()
+            calendar.time = date
+            calendar.add(Calendar.DAY_OF_MONTH,30)
+            dateFormat.format(calendar.time)
+        }catch (e : Exception){
+            currentDate
+        }
     }
 
 

@@ -17,6 +17,7 @@
         app:layout_constraintBottom_toTopOf="@+id/logoutButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        android:background="@drawable/profile_field_background"
         android:clipToPadding="true"
         android:padding="16dp" />
 

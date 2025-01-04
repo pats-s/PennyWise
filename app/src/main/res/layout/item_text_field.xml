@@ -1,10 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="16dp"
+    android:elevation="4dp">
 
+    <!-- Label -->
     <TextView
         android:id="@+id/textFieldLabel"
         android:layout_width="wrap_content"
@@ -12,12 +17,17 @@
         android:text="Label"
         android:textStyle="bold"
         android:textSize="16sp"
-        android:paddingBottom="4dp" />
+        android:textColor="@color/black"
+        android:fontFamily="sans-serif-medium"
+        android:paddingBottom="8dp" />
 
+    <!-- Value -->
     <TextView
         android:id="@+id/textFieldValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Value"
-        android:textSize="14sp" />
+        android:textSize="14sp"
+        android:textColor="@color/black"
+        android:fontFamily="sans-serif" />
 </LinearLayout>
