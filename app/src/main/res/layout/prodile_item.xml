@@ -1,23 +1,44 @@
-<LinearLayout android:orientation="vertical"
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:elevation="4dp"
+    android:background="@drawable/profile_field_background">
 
+    <!-- Label -->
     <TextView
         android:id="@+id/profileFieldLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Field Label"/>
+        android:text="Field Label"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:fontFamily="sans-serif-medium"
+        android:paddingBottom="8dp" />
 
+    <!-- Input Field -->
     <EditText
         android:id="@+id/profileFieldInput"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:hint="Enter Value"/>
+        android:hint="Enter Value"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:fontFamily="sans-serif" />
+
 
     <ImageView
         android:id="@+id/profileImageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"/>
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginTop="12dp"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:scaleType="centerCrop"/>
+
 </LinearLayout>

@@ -30,6 +30,19 @@ class BillsViewModel(private val repository: PennyWiseRepository) : ViewModel() 
         repository.deductBillAmount(bill, bill.walletId,{ fetchBills(bill.walletId) }, { /* Handle Error */ })
     }
 
+    fun payAndMarkBill(bill: Bill) {
+        repository.deductBillAmount(bill, bill.walletId, onSuccess = {
+            repository.updateBillAfterPayment(bill, onSuccess = {
+                fetchBills(bill.walletId) // Refresh bills list
+            }, onFailure = { exception ->
+                _errorMessage.postValue(exception.message ?: "Failed to update bill")
+            })
+        }, onFailure = { exception ->
+            _errorMessage.postValue(exception.message ?: "Failed to pay bill")
+        })
+    }
+
+
 
     fun payBill(bill: Bill, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         repository.deductBillAmount(bill, bill.walletId, onSuccess = {

@@ -63,6 +63,12 @@ class BillsFragment : Fragment() {
 
             // Deduct bill amount and update Firestore
             viewModel.payBill(bill, onSuccess = {
+                // update the payment date after we pay
+                repository.updateBillAfterPayment(bill, onSuccess = {
+                    Toast.makeText(binding.root.context, "Bill marked as paid.", Toast.LENGTH_SHORT).show()
+                }, onFailure = { exception ->
+                    Toast.makeText(binding.root.context, "Error: ${exception.message}", Toast.LENGTH_SHORT).show()
+                })
                 // Fetch the updated wallet balance only after successful deduction
                 repository.getWallet(bill.walletId, onSuccess = { wallet ->
                     sharedViewModel.updateWalletBalance(wallet.balance)
@@ -88,11 +94,16 @@ class BillsFragment : Fragment() {
             val today = getTodayDate()
 
             bills.forEach { bill ->
-                if(bill.paymentDate == today){
+                if(bill.paymentDate == today && !bill.paid){
                     repository.getWallet(bill.walletId, onSuccess = {wallet ->
                         if (wallet.balance >= bill.amount){
                             viewModel.deductBill(bill)
-                            Toast.makeText(requireContext(), "Bill '${bill.name}', paid automatically", Toast.LENGTH_SHORT).show()
+                            repository.updateBillAfterPayment(bill, onSuccess = {
+                                Toast.makeText(requireContext(), "Bill '${bill.name}', paid automatically", Toast.LENGTH_SHORT).show()
+                            },
+                                onFailure = { exception ->
+                                    Toast.makeText(requireContext(), "Error updating bill: ${exception.message}", Toast.LENGTH_SHORT).show()
+                                })
                         }else{
                             Toast.makeText(requireContext(), "Insufficient balance for bill '${bill.name}'. Please pay manually later", Toast.LENGTH_SHORT).show()
                         }
