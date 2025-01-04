@@ -452,6 +452,7 @@ class PennyWiseRepository private constructor(context: Context) {
             }
             .addOnFailureListener { exception ->
                 onFailure(exception)
+
             }
     }
 
