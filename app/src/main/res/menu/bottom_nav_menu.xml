@@ -18,4 +18,10 @@
         android:icon="@drawable/ic_analytics"
         android:title="Insights"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/fragment_bills"
+        android:icon="@drawable/ic_analytics"
+        android:title="Bills"
+        app:showAsAction="ifRoom" />
 </menu>

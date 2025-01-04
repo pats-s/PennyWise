@@ -47,13 +47,48 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
     val savingGoals: LiveData<List<SavingGoal>> get() = _savingGoals
 
     init {
-        fetchUserData()
+        //fetchUserData()
         checkAndUploadPredefinedCategories()
         fetchCategories()
     }
 
 
-    private fun fetchUserData() {
+    fun fetchUserData() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
+        if (currentUser != null) {
+            val userId = currentUser.uid
+
+            repository.getUserData(userId, onSuccess = { user ->
+                _userName.postValue(user.firstName)
+                Log.d("firstName", user.firstName)
+
+                // Fetch wallet data using the wallet ID from the user document
+                repository.getWallet(user.walletId, onSuccess = { wallet ->
+                    // Only update if the fetched balance is different from the current balance
+                    val currentBalance = _walletBalance.value
+                    if (currentBalance == null || currentBalance != wallet.balance) {
+                        _walletBalance.postValue(wallet.balance)
+                        _errorMessage.postValue("Value posted from HPVM: ${wallet.balance}")
+                    }
+                }, onFailure = { exception ->
+                    _walletBalance.postValue(0.0) // Default balance
+                    _errorMessage.postValue("Failed to fetch wallet data: ${exception.message}")
+                })
+            }, onFailure = { exception ->
+                _errorMessage.postValue("Failed to fetch user data: ${exception.message}")
+            })
+        } else {
+            _errorMessage.postValue("No user is logged in.")
+        }
+    }
+
+
+
+
+
+
+    fun fetchUserData1() {
         val currentUser = FirebaseAuth.getInstance().currentUser
 
         if (currentUser != null) {
@@ -66,6 +101,7 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
                 // Fetch wallet data using the wallet ID from the user document
                 repository.getWallet(user.walletId, onSuccess = { wallet ->
                     _walletBalance.postValue(wallet.balance)
+                    _errorMessage.postValue("Value posted from HPVM: ${wallet.balance}")
                 }, onFailure = { exception ->
                     _walletBalance.postValue(0.0) // Default balance
                     _errorMessage.postValue("Failed to fetch wallet data: ${exception.message}")
@@ -77,6 +113,7 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
             _errorMessage.postValue("No user is logged in.")
         }
     }
+
 
     private fun fetchCategories() {
         repository.getCategories(
