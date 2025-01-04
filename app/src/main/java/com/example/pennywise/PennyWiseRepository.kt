@@ -429,12 +429,16 @@ class PennyWiseRepository private constructor(context: Context) {
         return SimpleDateFormat("d/M/yyyy", Locale.getDefault()).format(calendar.time)
     }
 
-
     fun getWallet(
         walletId: String,
-        onSuccess: (Wallet) -> Unit,
+        onSuccess: (Wallet) -> Unit ,
         onFailure: (Exception) -> Unit
     ) {
+        if (walletId.isEmpty()) {
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
         firestore.collection("wallets")
             .document(walletId)
             .get()
@@ -448,8 +452,10 @@ class PennyWiseRepository private constructor(context: Context) {
             }
             .addOnFailureListener { exception ->
                 onFailure(exception)
+
             }
     }
+
 
     fun updateWalletBalance(
         walletId: String,
@@ -457,16 +463,40 @@ class PennyWiseRepository private constructor(context: Context) {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        if (walletId.isEmpty()) {
+            println("invalid wallet ID")
+            println(walletId)
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
         firestore.collection("wallets")
             .document(walletId)
             .update("balance", newBalance)
             .addOnSuccessListener {
+                println("Wallet balance updated successfully.")
+                //sharedViewModel.updateWalletBalance(wallet.balance)
                 onSuccess()
             }
             .addOnFailureListener { exception ->
+                println("Failed to update wallet balance: ${exception.message}")
                 onFailure(exception)
             }
+
     }
+
+    fun updateSavingGoal(
+        savingGoal: SavingGoal,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("saving_goals")
+            .document(savingGoal.id)
+            .set(savingGoal)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { exception -> onFailure(exception) }
+    }
+
 
 
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,122 +8,151 @@
     android:background="@color/backgroundColor"
     tools:context=".ui.view.InsightsFragment">
 
-    <!-- Title -->
-    <TextView
-        android:id="@+id/insightsTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Your Financial Insights"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:textColor="@color/primaryDark"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
-
-    <!-- Financial Health Score -->
-    <TextView
-        android:id="@+id/scoreTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-        android:textColor="@color/primaryDark"
-        app:layout_constraintTop_toBottomOf="@id/insightsTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="24dp"/>
-
-    <!-- Score Range Interpretation -->
-    <TextView
-        android:id="@+id/scoreRangeTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="N/A"
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:textColor="@color/primaryDark"
-        app:layout_constraintTop_toBottomOf="@id/scoreTextView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp"/>
-
-    <!-- Income and Expense Info -->
-    <LinearLayout
-        android:id="@+id/linearContainer"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/scoreRangeTextView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp">
+        android:layout_height="wrap_content">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/insightsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your Financial Insights"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/primaryDark"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp"/>
+
+        <!-- Financial Health Score -->
+        <TextView
+            android:id="@+id/scoreTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+            android:textColor="@color/primaryDark"
+            app:layout_constraintTop_toBottomOf="@id/insightsTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="24dp"/>
+
+        <!-- Score Range Interpretation -->
+        <TextView
+            android:id="@+id/scoreRangeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="N/A"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/primaryDark"
+            app:layout_constraintTop_toBottomOf="@id/scoreTextView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp"/>
+
+        <!-- Income and Expense Info -->
+        <LinearLayout
+            android:id="@+id/linearContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/scoreRangeTextView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="32dp">
+
+            <TextView
+                android:id="@+id/incomeTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Income: $0.00"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textColor="@color/primaryDark"
+                android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/expenseTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Expense: $0.00"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textColor="@color/primaryDark"
+                android:gravity="center"/>
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/incomeTextView"
+            android:id="@+id/TitleTopSpendingTV"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="20dp"
             android:layout_weight="1"
-            android:text="Income: $0.00"
+            android:gravity="center"
+            android:text="@string/top_spending_categories"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="@color/primaryDark"
-            android:gravity="center"/>
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearContainer" />
+
+        <Spinner
+            android:id="@+id/filterSpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/filter_options"
+            android:minHeight="48dp"
+            app:layout_constraintBottom_toTopOf="@+id/topCategoriesRecyclerView"
+            app:layout_constraintTop_toBottomOf="@+id/TitleTopSpendingTV"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <Button
+            android:id="@+id/selectDateButton"
+            android:layout_width="wrap_content"
+            android:minHeight="48dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/filterSpinner"
+            android:text="Select Date" />
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/topCategoriesRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/selectDateButton"
+            tools:listitem="@layout/item_category_spending" />
 
         <TextView
-            android:id="@+id/expenseTextView"
-            android:layout_width="0dp"
+            android:id="@+id/tvSavingGoalsTitle"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Expense: $0.00"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:text="Track Your Saving Goals"
+            android:textSize="20sp"
+            android:textStyle="bold"
             android:textColor="@color/primaryDark"
-            android:gravity="center"/>
-    </LinearLayout>
+            app:layout_constraintTop_toBottomOf="@id/topCategoriesRecyclerView"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp" />
 
-    <TextView
-        android:id="@+id/TitleTopSpendingTV"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="20dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:text="@string/top_spending_categories"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        android:textColor="@color/primaryDark"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearContainer" />
-
-    <Spinner
-        android:id="@+id/filterSpinner"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:entries="@array/filter_options"
-        android:minHeight="48dp"
-        app:layout_constraintBottom_toTopOf="@+id/topCategoriesRecyclerView"
-        app:layout_constraintTop_toBottomOf="@+id/TitleTopSpendingTV"
-        app:layout_constraintStart_toStartOf="parent"/>
-
-    <Button
-        android:id="@+id/selectDateButton"
-        android:layout_width="wrap_content"
-        android:minHeight="48dp"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/filterSpinner"
-        android:text="Select Date" />
-
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/topCategoriesRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/selectDateButton"
-        tools:listitem="@layout/item_category_spending" />
+        <!-- RecyclerView for saving goals -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSavingGoals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:clipToPadding="false"
+            android:scrollbars="vertical"
+            app:layout_constraintTop_toBottomOf="@id/tvSavingGoalsTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
 
 
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>
