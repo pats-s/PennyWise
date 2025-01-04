@@ -1,6 +1,7 @@
 package com.example.pennywise
 
 import android.content.Context
+import android.content.ReceiverCallNotAllowedException
 import androidx.fragment.app.activityViewModels
 import com.example.pennywise.api.RetrofitInstance
 import com.example.pennywise.local.dao.AppSettingsDao
@@ -221,11 +222,6 @@ class PennyWiseRepository private constructor(context: Context) {
         })
     }
 
-
-
-
-
-
     //jane
     fun getTodayTransactions(
         onSuccess: (List<Transaction>) -> Unit,
@@ -433,6 +429,7 @@ class PennyWiseRepository private constructor(context: Context) {
         return SimpleDateFormat("d/M/yyyy", Locale.getDefault()).format(calendar.time)
     }
 
+
     fun getWallet(
         walletId: String,
         onSuccess: (Wallet) -> Unit ,
@@ -456,7 +453,6 @@ class PennyWiseRepository private constructor(context: Context) {
             }
             .addOnFailureListener { exception ->
                 onFailure(exception)
-
             }
     }
 
@@ -479,7 +475,6 @@ class PennyWiseRepository private constructor(context: Context) {
             .update("balance", newBalance)
             .addOnSuccessListener {
                 println("Wallet balance updated successfully.")
-                //sharedViewModel.updateWalletBalance(wallet.balance)
                 onSuccess()
             }
             .addOnFailureListener { exception ->
@@ -488,19 +483,6 @@ class PennyWiseRepository private constructor(context: Context) {
             }
 
     }
-
-    fun updateSavingGoal(
-        savingGoal: SavingGoal,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        firestore.collection("saving_goals")
-            .document(savingGoal.id)
-            .set(savingGoal)
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { exception -> onFailure(exception) }
-    }
-
 
 
     //BILL REMINDERS FEATURE
@@ -578,6 +560,40 @@ class PennyWiseRepository private constructor(context: Context) {
             currentDate
         }
     }
+
+
+
+
+
+    fun deductBillAmount1(
+        bill: Bill,
+        walletId: String, ////////////// solution//////////
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        if (bill.walletId.isEmpty()) {
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
+        println("Attempting to deduct bill. Wallet ID: ${bill.walletId}, Amount: ${bill.amount}")
+
+        getWallet(bill.walletId, onSuccess = { wallet ->
+            println("Current Wallet Balance: ${wallet.balance}")
+            if (wallet.balance >= bill.amount) {
+                val newBalance = wallet.balance - bill.amount
+                println("New Wallet Balance: $newBalance")
+                updateWalletBalance(walletId, newBalance, onSuccess, onFailure)
+            } else {
+                onFailure(Exception("Insufficient balance"))
+            }
+        }, onFailure = { exception ->
+            println("Failed to fetch wallet: ${exception.message}")
+            onFailure(exception)
+        })
+    }
+
+
 
 
 

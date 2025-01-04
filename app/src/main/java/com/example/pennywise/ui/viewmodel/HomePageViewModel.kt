@@ -9,7 +9,6 @@ import com.example.pennywise.PennyWiseRepository
 import com.example.pennywise.remote.Category
 import com.example.pennywise.remote.SavingGoal
 import com.example.pennywise.remote.Transaction
-import com.example.pennywise.remote.Wallet
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -268,16 +267,13 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
     fun fetchSavingGoals(walletId: String) {
         repository.getSavingGoals(walletId,
             onSuccess = { goals ->
-                // Filter out completed saving goals
-                val uncompletedGoals = goals.filter { it.targetAmount > it.savedAmount }
-                _savingGoals.postValue(uncompletedGoals)
+                _savingGoals.postValue(goals)
             },
             onFailure = { exception ->
                 _errorMessage.postValue("Failed to fetch saving goals: ${exception.message}")
             }
         )
     }
-
 
     fun addSavingGoal(savingGoal: SavingGoal) {
         repository.addSavingGoal(
@@ -352,40 +348,4 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
             onFailure = { println("Error: ${it.message}") }
         )
     }
-
-    fun updateSavingGoal(savingGoal: SavingGoal) {
-        repository.updateSavingGoal(
-            savingGoal,
-            onSuccess = {
-                fetchSavingGoals(savingGoal.walletId) // Refresh goals after updating
-            },
-            onFailure = { exception ->
-                _errorMessage.postValue("Failed to update saving goal: ${exception.message}")
-            }
-        )
-    }
-
-    fun fetchWalletDetails(walletId: String, onSuccess: (Wallet) -> Unit) {
-        repository.getWallet(walletId,
-            onSuccess = { wallet ->
-                onSuccess(wallet)
-            },
-            onFailure = { exception ->
-                _errorMessage.postValue("Failed to fetch wallet details: ${exception.message}")
-            }
-        )
-    }
-
-    fun updateWalletBalance(walletId: String, newBalance: Double) {
-        repository.updateWalletBalance(walletId, newBalance,
-            onSuccess = {
-                _walletBalance.postValue(newBalance) // Update LiveData for the UI
-            },
-            onFailure = { exception ->
-                _errorMessage.postValue("Failed to update wallet balance: ${exception.message}")
-            }
-        )
-    }
-
-
 }
