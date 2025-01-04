@@ -13,6 +13,7 @@ class BillsViewModel(private val repository: PennyWiseRepository) : ViewModel() 
     val bills: LiveData<List<Bill>> get() = _bills
 
 
+
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
@@ -29,9 +30,21 @@ class BillsViewModel(private val repository: PennyWiseRepository) : ViewModel() 
         repository.deductBillAmount(bill, bill.walletId,{ fetchBills(bill.walletId) }, { /* Handle Error */ })
     }
 
-    fun payBill(bill: Bill) {
+
+    fun payBill(bill: Bill, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        repository.deductBillAmount(bill, bill.walletId, onSuccess = {
+            onSuccess()
+        }, onFailure = { exception ->
+            onFailure(exception)
+        })
+    }
+
+
+
+    fun payBill1(bill: Bill) {
         repository.deductBillAmount(bill, bill.walletId,{
             fetchBills(bill.walletId)
+
         }, { exception ->
             _errorMessage.postValue(exception.message ?: "An error occurred")
         })

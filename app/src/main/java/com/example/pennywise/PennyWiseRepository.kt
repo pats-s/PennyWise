@@ -474,7 +474,6 @@ class PennyWiseRepository private constructor(context: Context) {
             .update("balance", newBalance)
             .addOnSuccessListener {
                 println("Wallet balance updated successfully.")
-                //sharedViewModel.updateWalletBalance(wallet.balance)
                 onSuccess()
             }
             .addOnFailureListener { exception ->
@@ -513,7 +512,30 @@ class PennyWiseRepository private constructor(context: Context) {
             .addOnFailureListener { onFailure(it) }
     }
 
+
     fun deductBillAmount(
+        bill: Bill,
+        walletId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        getWallet(walletId, onSuccess = { wallet ->
+            if (wallet.balance >= bill.amount) {
+                val newBalance = wallet.balance - bill.amount
+                updateWalletBalance(walletId, newBalance, onSuccess, onFailure)
+            } else {
+                onFailure(Exception("Insufficient balance"))
+            }
+        }, onFailure = { exception ->
+            onFailure(exception)
+        })
+    }
+
+
+
+
+
+    fun deductBillAmount1(
         bill: Bill,
         walletId: String, ////////////// solution//////////
         onSuccess: () -> Unit,
