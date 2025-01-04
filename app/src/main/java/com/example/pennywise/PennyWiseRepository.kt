@@ -468,5 +468,18 @@ class PennyWiseRepository private constructor(context: Context) {
             }
     }
 
+    fun updateSavingGoal(
+        savingGoal: SavingGoal,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("saving_goals")
+            .document(savingGoal.id)
+            .set(savingGoal)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { exception -> onFailure(exception) }
+    }
+
+
 
 }

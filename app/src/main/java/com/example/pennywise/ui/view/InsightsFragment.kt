@@ -9,13 +9,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
-import androidx.compose.material3.DatePickerDialog
+//import androidx.compose.material3.DatePickerDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.pennywise.PennyWiseRepository
 import com.example.pennywise.databinding.FragmentInsightsBinding
 import com.example.pennywise.ui.adapter.CategorySpendingAdapter
+import com.example.pennywise.ui.adapter.InsightsSavingGoalAdapter
 import com.example.pennywise.ui.viewmodel.InsightsViewModel
 import com.example.pennywise.ui.viewmodel.InsightsViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
@@ -47,7 +48,9 @@ class InsightsFragment : Fragment() {
         if (loggedInUserId != null) {
             viewModel.calculateFinancialHealthScore(loggedInUserId)
 //            viewModel.fetchTopSpendingCategories(loggedInUserId)
-
+            fetchUserWalletId(loggedInUserId) { walletId ->
+                viewModel.fetchSavingGoals(walletId)
+            }
             setupFilter(loggedInUserId)
         }
 
@@ -80,6 +83,13 @@ class InsightsFragment : Fragment() {
         viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
             // Optionally display error message
         }
+
+        viewModel.savingGoals.observe(viewLifecycleOwner) { savingGoals ->
+            val adapter = InsightsSavingGoalAdapter(savingGoals)
+            binding.rvSavingGoals.adapter = adapter
+            binding.rvSavingGoals.layoutManager = LinearLayoutManager(requireContext())
+        }
+
 
         return binding.root
     }
@@ -168,6 +178,22 @@ class InsightsFragment : Fragment() {
         return Pair(startOfMonth, endOfMonth)
     }
 
+    private fun fetchUserWalletId(userId: String, onWalletIdFetched: (String) -> Unit) {
+        val firestore = FirebaseFirestore.getInstance()
+        firestore.collection("users").document(userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val walletId = snapshot.getString("walletId")
+                if (!walletId.isNullOrEmpty()) {
+                    onWalletIdFetched(walletId)
+                } else {
+                    Log.e("InsightsFragment", "Wallet ID is null or empty")
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("InsightsFragment", "Failed to fetch wallet ID: ${exception.message}")
+            }
+    }
 
 
 
@@ -192,10 +218,10 @@ class InsightsFragment : Fragment() {
             else -> null
         }
     }
-        override fun onDestroyView() {
-            super.onDestroyView()
-            _binding = null
-        }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
 }
 

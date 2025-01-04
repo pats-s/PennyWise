@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.pennywise.PennyWiseRepository
+import com.example.pennywise.remote.SavingGoal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,6 +30,10 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
 
     private val _spendingByCategory = MutableLiveData<List<Pair<String, Double>>>()
     val spendingByCategory: LiveData<List<Pair<String, Double>>> get() = _spendingByCategory
+
+    private val _savingGoals = MutableLiveData<List<SavingGoal>>()
+    val savingGoals: LiveData<List<SavingGoal>> get() = _savingGoals
+
 
     fun calculateFinancialHealthScore(userId: String) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -248,24 +253,16 @@ class InsightsViewModel(private val repository: PennyWiseRepository) : ViewModel
         return inputFormat.format(calendar.time)
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    fun fetchSavingGoals(walletId: String) {
+        repository.getSavingGoals(walletId,
+            onSuccess = { goals ->
+                _savingGoals.postValue(goals)
+            },
+            onFailure = { exception ->
+                Log.e("InsightsViewModel", "Error fetching saving goals: ${exception.message}")
+            }
+        )
+    }
 
 //
 //
