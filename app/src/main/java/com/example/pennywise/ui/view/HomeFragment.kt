@@ -16,7 +16,6 @@ import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -36,6 +35,14 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
+import com.example.pennywise.local.entities.AppSettingsEntity
+import kotlinx.coroutines.launch
+import androidx.room.Room
+import androidx.lifecycle.lifecycleScope
+import com.example.pennywise.PennyWiseDatabase
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
 
@@ -92,7 +99,8 @@ class HomeFragment : Fragment() {
         }
 
 
-        homePageViewModel.fetchTodayTransactions()
+        //homePageViewModel.fetchTodayTransactions()
+        homePageViewModel.fetchTodayUserTransactions()
         // Add click listener for View All button
         binding.btnViewAll.setOnClickListener {
             navigateToPastTransactions()
@@ -116,6 +124,7 @@ class HomeFragment : Fragment() {
             val intent = Intent(requireContext(), ProfileActivity::class.java)
             startActivity(intent)
         }
+
 
     }
 
@@ -176,12 +185,16 @@ class HomeFragment : Fragment() {
             adapter = transactionAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
-
-        savingGoalAdapter = SavingGoalAdapter(emptyList())
+        savingGoalAdapter = SavingGoalAdapter(emptyList()) { savingGoal ->
+            showAddAmountDialog(savingGoal)
+        }
         binding.rvSavingGoals.apply {
             adapter = savingGoalAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
+
+
+
     }
 
     private fun observeViewModel() {
@@ -305,7 +318,8 @@ class HomeFragment : Fragment() {
 
 
     private fun loadInitialData() {
-        homePageViewModel.fetchTodayTransactions()
+        //homePageViewModel.fetchTodayTransactions()
+        homePageViewModel.fetchTodayUserTransactions()
         homePageViewModel.fetchSavingGoals(currentUserWalletId)
         homePageViewModel.fetchCategoriesForMapping()
     }
@@ -375,6 +389,68 @@ class HomeFragment : Fragment() {
         dialog.show()
     }
 
+    private fun showAddAmountDialog(savingGoal: SavingGoal) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_amount, null)
+
+        val amountInput = dialogView.findViewById<EditText>(R.id.etAmount)
+        val amountLeftText = dialogView.findViewById<TextView>(R.id.tvAmountLeft)
+        val btnAdd = dialogView.findViewById<Button>(R.id.btnAdd)
+        val btnCancel = dialogView.findViewById<Button>(R.id.btnCancel)
+
+        val amountLeft = savingGoal.targetAmount - savingGoal.savedAmount
+        amountLeftText.text = "Amount Left: $${String.format("%.2f", amountLeft)}"
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        btnAdd.setOnClickListener {
+            val amountToAdd = amountInput.text.toString().toDoubleOrNull()
+            if (amountToAdd == null || amountToAdd <= 0) {
+                Toast.makeText(requireContext(), "Please enter a valid amount", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (amountToAdd > amountLeft) {
+                Toast.makeText(requireContext(), "Amount exceeds the remaining target", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Fetch wallet details to validate balance
+            homePageViewModel.fetchWalletDetails(savingGoal.walletId) { wallet ->
+                if (wallet.balance < amountToAdd) {
+                    Toast.makeText(requireContext(), "Insufficient balance in wallet", Toast.LENGTH_SHORT).show()
+                    return@fetchWalletDetails
+                }
+
+                val newSavedAmount = savingGoal.savedAmount + amountToAdd
+                val newWalletBalance = wallet.balance - amountToAdd
+
+                // Update saving goal
+                homePageViewModel.updateSavingGoal(savingGoal.copy(savedAmount = newSavedAmount))
+
+                // Update wallet balance
+                homePageViewModel.updateWalletBalance(savingGoal.walletId, newWalletBalance)
+
+                // Refresh the UI
+                if (newSavedAmount >= savingGoal.targetAmount) {
+                    homePageViewModel.fetchSavingGoals(savingGoal.walletId)
+                }
+
+                dialog.dismiss()
+            }
+        }
+
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+
+
+
     private fun showDatePicker(onDateSelected: (Calendar) -> Unit) {
         val calendar = Calendar.getInstance()
         DatePickerDialog(
@@ -390,6 +466,7 @@ class HomeFragment : Fragment() {
             calendar.get(Calendar.DAY_OF_MONTH)
         ).show()
     }
+
 
 
     private fun showToast(message: String) {

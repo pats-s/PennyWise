@@ -48,9 +48,6 @@ class PennyWiseRepository private constructor(context: Context) {
             }
     }
 
-
-
-
     fun uploadPredefinedCategories(
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
@@ -81,6 +78,24 @@ class PennyWiseRepository private constructor(context: Context) {
                 onFailure(exception)
             }
     }
+
+    fun getCategoryName(
+        categoryId: String,
+        onSuccess: (String?) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("categories")
+            .document(categoryId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val category = snapshot.toObject(Category::class.java)
+                onSuccess(category?.name)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
 
     fun addTransaction(
         transaction: Transaction,
@@ -172,6 +187,42 @@ class PennyWiseRepository private constructor(context: Context) {
     }
 
 
+    //for a single user
+    fun getTodayTransactionsForUser(
+        userId: String,
+        onSuccess: (List<Transaction>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        // Format today's date to match Firestore format
+        val today = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+
+        // Fetch user data to get the wallet ID
+        getUserData(userId, onSuccess = { user ->
+            val walletId = user.walletId
+
+            // Query transactions for the wallet and today's date
+            firestore.collection("transactions")
+                .whereEqualTo("walletId", walletId)
+                .whereEqualTo("date", today)
+                .get()
+                .addOnSuccessListener { result ->
+                    val transactions = result.documents.mapNotNull { it.toObject(Transaction::class.java) }
+                    onSuccess(transactions)
+                }
+                .addOnFailureListener { exception ->
+                    onFailure(exception)
+                }
+        }, onFailure = { exception ->
+            onFailure(exception)
+        })
+    }
+
+
+
+
+
+
+    //jane
     fun getTodayTransactions(
         onSuccess: (List<Transaction>) -> Unit,
         onFailure: (Exception) -> Unit
@@ -222,7 +273,28 @@ class PennyWiseRepository private constructor(context: Context) {
             }
         }
     }
+    val firebaseFirestore = FirebaseFirestore.getInstance()
+    //for the logged in user only
+    fun getTransactionsForWallet(
+        walletId: String,
+        onSuccess: (List<Transaction>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        // Assuming transactions are stored in a Firebase collection
+        val transactionsRef = firebaseFirestore.collection("transactions")
+        transactionsRef.whereEqualTo("walletId", walletId).get()
+            .addOnSuccessListener { snapshot ->
+                val transactions = snapshot.toObjects(Transaction::class.java)
+                onSuccess(transactions)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
 
+
+
+    //jane
     fun getFilteredTransactions(
         day: String?,
         startOfWeekOrMonth: String?,
@@ -258,6 +330,81 @@ class PennyWiseRepository private constructor(context: Context) {
     }
 
 
+
+    //tried to do it today
+    fun getFilteredTransactions1(
+        walletId: String,
+        day: String?,
+        startOfWeekOrMonth: String?,
+        endOfWeek: String?,
+        onSuccess: (List<Transaction>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val transactionsCollection = firestore.collection("transactions")
+        var query: Query = transactionsCollection
+
+        try {
+            query = when {
+                day != null -> query.whereEqualTo("date", day)
+                startOfWeekOrMonth != null && endOfWeek != null -> query
+                    .whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
+                    .whereLessThanOrEqualTo("date", endOfWeek)
+                else -> query
+            }
+
+            query.get()
+                .addOnSuccessListener { snapshot ->
+                    val transactions = snapshot.toObjects(Transaction::class.java)
+                    onSuccess(transactions)
+                }
+                .addOnFailureListener { exception ->
+                    onFailure(exception)
+                }
+        } catch (e: Exception) {
+            onFailure(e)
+        }
+    }
+
+
+
+
+    //we were using
+    fun getFilteredTransactions2(
+        day: String?,
+        startOfWeekOrMonth: String?,
+        endOfWeek: String?,
+        onSuccess: (List<Transaction>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val transactionsCollection = firestore.collection("transactions")
+        var query: Query = transactionsCollection
+
+        try {
+            query = when {
+                day != null -> query.whereEqualTo("date", day)
+                startOfWeekOrMonth != null && endOfWeek != null -> query
+                    .whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
+                    .whereLessThanOrEqualTo("date", endOfWeek)
+                startOfWeekOrMonth != null -> query.whereGreaterThanOrEqualTo("date", startOfWeekOrMonth)
+                else -> query
+            }
+
+            query.get()
+                .addOnSuccessListener { snapshot ->
+                    val transactions = snapshot.toObjects(Transaction::class.java)
+                    onSuccess(transactions)
+                }
+                .addOnFailureListener { exception ->
+                    onFailure(exception)
+                }
+        } catch (e: Exception) {
+            onFailure(e)
+        }
+    }
+
+
+
+
     private fun formatDateToStandard(date: String): String {
         val inputFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault()) // Flexible input format
         val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) // Consistent output format
@@ -282,12 +429,16 @@ class PennyWiseRepository private constructor(context: Context) {
         return SimpleDateFormat("d/M/yyyy", Locale.getDefault()).format(calendar.time)
     }
 
-
     fun getWallet(
         walletId: String,
-        onSuccess: (Wallet) -> Unit,
+        onSuccess: (Wallet) -> Unit ,
         onFailure: (Exception) -> Unit
     ) {
+        if (walletId.isEmpty()) {
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
         firestore.collection("wallets")
             .document(walletId)
             .get()
@@ -301,8 +452,10 @@ class PennyWiseRepository private constructor(context: Context) {
             }
             .addOnFailureListener { exception ->
                 onFailure(exception)
+
             }
     }
+
 
     fun updateWalletBalance(
         walletId: String,
@@ -310,16 +463,40 @@ class PennyWiseRepository private constructor(context: Context) {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        if (walletId.isEmpty()) {
+            println("invalid wallet ID")
+            println(walletId)
+            onFailure(Exception("Invalid wallet ID"))
+            return
+        }
+
         firestore.collection("wallets")
             .document(walletId)
             .update("balance", newBalance)
             .addOnSuccessListener {
+                println("Wallet balance updated successfully.")
+                //sharedViewModel.updateWalletBalance(wallet.balance)
                 onSuccess()
             }
             .addOnFailureListener { exception ->
+                println("Failed to update wallet balance: ${exception.message}")
                 onFailure(exception)
             }
+
     }
+
+    fun updateSavingGoal(
+        savingGoal: SavingGoal,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        firestore.collection("saving_goals")
+            .document(savingGoal.id)
+            .set(savingGoal)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { exception -> onFailure(exception) }
+    }
+
 
 
 }

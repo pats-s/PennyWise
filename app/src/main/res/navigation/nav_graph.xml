@@ -15,6 +15,20 @@
         android:label="Past Transactions"
         tools:layout="@layout/fragment_past_transactions" />
 
+    <fragment
+        android:id="@+id/fragment_profile"
+        android:name="com.example.pennywise.ui.view.ProfileFragment"
+        android:label="Profile Management"
+        tools:layout="@layout/fragment_profile"
+        />
+
+    <fragment
+        android:id="@+id/fragment_insights"
+        android:name="com.example.pennywise.ui.view.InsightsFragment"
+        android:label="Insights"
+        tools:layout="@layout/fragment_insights"
+        />
+
     <action
         android:id="@+id/action_homeFragment_to_pastTransactionsFragment"
         app:destination="@id/pastTransactionsFragment" />

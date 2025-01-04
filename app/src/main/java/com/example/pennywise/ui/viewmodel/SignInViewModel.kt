@@ -13,7 +13,38 @@ class SignInViewModel : ViewModel() {
     private val _signInResult = MutableLiveData<Result<String>>()
     val signInResult: LiveData<Result<String>> get() = _signInResult
 
+
+    // this is for sign in with email verification
     fun signIn(email: String, password: String) {
+        if (email.isEmpty() || password.isEmpty()) {
+            _signInResult.value = Result.failure(Exception("Please fill in all fields"))
+            return
+        }
+
+        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = FirebaseAuth.getInstance().currentUser
+                    if (user != null) {
+                        if (user.isEmailVerified) {
+                            fetchUserDetailsFromFirestore(user.uid)
+                        } else {
+                            _signInResult.value = Result.failure(Exception("Please verify your email before signing in."))
+                        }
+                    } else {
+                        _signInResult.value = Result.failure(Exception("Failed to retrieve user information"))
+                    }
+                } else {
+                    _signInResult.value = Result.failure(task.exception ?: Exception("Sign-in failed"))
+                }
+            }
+    }
+
+
+
+
+    //was using before verification
+    fun signIn1(email: String, password: String) {
         if (email.isEmpty() || password.isEmpty()) {
             _signInResult.value = Result.failure(Exception("Please fill in all fields"))
             return
