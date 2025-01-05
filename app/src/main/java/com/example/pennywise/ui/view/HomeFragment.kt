@@ -92,6 +92,7 @@ class HomeFragment : Fragment() {
         fetchAndSetWelcomeMessage()
 
         observeViewModel()
+
         sharedViewModel.walletBalance.observe(viewLifecycleOwner) { balance ->
             binding.tvTotalBalance.text = "$${String.format("%.2f", balance)}"
         }
@@ -206,7 +207,17 @@ class HomeFragment : Fragment() {
 
     private fun observeViewModel() {
 
+        // Observe today's transactions from HomePageViewModel
         homePageViewModel.todayTransactions.observe(viewLifecycleOwner) { transactions ->
+            val categoriesMap = homePageViewModel.categories.value?.associateBy { it.id }.orEmpty()
+            transactionAdapter.updateTransactions(transactions, categoriesMap)
+
+            // Update SharedViewModel with the initial list
+            sharedViewModel.updateTransactions(transactions)
+        }
+
+        // Observe dynamically added transactions from SharedViewModel
+        sharedViewModel.transactions.observe(viewLifecycleOwner) { transactions ->
             val categoriesMap = homePageViewModel.categories.value?.associateBy { it.id }.orEmpty()
             transactionAdapter.updateTransactions(transactions, categoriesMap)
         }

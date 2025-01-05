@@ -14,5 +14,7 @@ val predefinedCategories = listOf(
     Category(id = "6", name = "Entertainment", type = "Expense"),
     Category(id = "7", name = "Utilities", type = "Expense"),
     Category(id = "8", name = "Transportation", type = "Expense"),
-    Category(id = "9", name = "Dining Out", type = "Expense")
-)
+    Category(id = "9", name = "Dining Out", type = "Expense"),
+    Category(id = "10", name = "Penny Send", type = "Expense"),
+    Category(id = "11", name = "Penny Receive", type = "Income")
+    )

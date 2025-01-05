@@ -39,9 +39,10 @@ class TransactionAdapter(
 
     override fun getItemCount(): Int = transactions.size
 
-    fun updateTransactions(newTransactions: List<Transaction>, newCategories: Map<String, Category>) {
-        transactions = newTransactions
-        categories = newCategories
-        notifyDataSetChanged()
+    fun updateTransactions(newTransactions: List<Transaction>, categories: Map<String, Category>) {
+        this.transactions = newTransactions
+        this.categories = categories
+        notifyDataSetChanged() // Notify RecyclerView of data changes
     }
+
 }
