@@ -156,8 +156,12 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
                     repository.addTransaction(transaction, onSuccess = {
                         repository.updateWalletBalance(user.walletId, updatedBalance, onSuccess = {
                             _walletBalance.postValue(updatedBalance)
-                            //fetchTodayTransactions()
-                            fetchTodayUserTransactions() // for the logged in user only
+
+                            // Update today's transactions
+                            val updatedTransactions = _todayTransactions.value.orEmpty().toMutableList()
+                            updatedTransactions.add(transaction)
+                            _todayTransactions.postValue(updatedTransactions)
+
                         }, onFailure = {
                             _errorMessage.postValue("Failed to update wallet balance!")
                         })
@@ -175,6 +179,7 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
         }
     }
 
+
     private fun formatDateToStandard(date: String): String {
         val inputFormat = SimpleDateFormat("d/M/yyyy", Locale.getDefault())
         val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -185,11 +190,6 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
             date // If parsing fails, return the original date
         }
     }
-
-
-
-
-
 
 
     fun fetchUserTransactions() {
