@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,14 +44,19 @@ import kotlinx.coroutines.launch
 import androidx.room.Room
 import androidx.lifecycle.lifecycleScope
 import com.example.pennywise.PennyWiseDatabase
+import com.example.pennywise.PennyWiseRepository
+import com.example.pennywise.local.predefinedCategories
+import com.example.pennywise.remote.Transaction
 import com.example.pennywise.ui.viewmodel.SharedViewModel
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomepageBinding? = null
     private val binding get() = _binding!!
     private val sharedViewModel: SharedViewModel by activityViewModels()
+
 
 
     // Lazy initialization of ViewModel
@@ -83,6 +89,10 @@ class HomeFragment : Fragment() {
             observeViewModel()
             loadInitialData()
         }
+
+
+        checkPendingRequests()
+
 
         homePageViewModel.fetchCategoriesForMapping()
         // Initialize the RecyclerView
@@ -135,6 +145,7 @@ class HomeFragment : Fragment() {
 
 
     }
+
 
     private fun fetchUserWalletId(onWalletIdFetched: (String) -> Unit) {
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -255,6 +266,8 @@ class HomeFragment : Fragment() {
         }
 
     }
+
+
 
     private fun showAddTransactionDialog() {
         val dialogView =
@@ -468,6 +481,208 @@ class HomeFragment : Fragment() {
 
 
 
+    private fun checkPendingRequests() {
+        val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email
+
+        if (currentUserEmail.isNullOrEmpty()) return
+
+        FirebaseFirestore.getInstance().collection("pendingRequests")
+            .whereEqualTo("payerEmail", currentUserEmail)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    val requests = querySnapshot.documents.map { it.data!! }
+                    showPendingRequestsDialog(requests)
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to fetch requests", Toast.LENGTH_SHORT).show()
+            }
+    }
+    private fun showPendingRequestsDialog(requests: List<Map<String, Any>>) {
+        val request = requests.first() // Show one request at a time for simplicity
+        val requestorEmail = request["requestorEmail"] as String
+        println("requestor email in the showPendingRequestDialog = $requestorEmail")
+        val amount = request["amount"] as Double
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Money Request")
+            .setMessage("$requestorEmail has requested $$amount. Would you like to proceed?")
+            .setPositiveButton("Accept") { _, _ ->
+                processRequest(request, accepted = true)
+            }
+            .setNegativeButton("Decline") { _, _ ->
+                processRequest(request, accepted = false)
+            }
+            .setCancelable(false) // Ensure the user makes a choice
+            .show()
+    }
+
+    private fun processRequest(request: Map<String, Any>, accepted: Boolean) {
+        val repository = PennyWiseRepository.getInstance(requireContext())
+        val requestId = request["requestId"] as String
+        val amount = request["amount"] as Double
+        val requestorEmail = request["requestorEmail"] as String
+        println("Requestor email in processRequest = $requestorEmail")
+
+        if (accepted) {
+            val payerEmail = FirebaseAuth.getInstance().currentUser?.email
+            if (payerEmail != null) {
+                repository.getUserWalletByEmail(payerEmail, onSuccess = { payerWallet ->
+                    if (payerWallet.balance >= amount) {
+                        val payerNewBalance = payerWallet.balance - amount
+
+                        repository.getUserWalletByEmail(requestorEmail, onSuccess = { requestorWallet ->
+                            val requestorNewBalance = requestorWallet.balance + amount
+
+                            // Update both balances in the repository
+                            repository.updateWalletBalance(payerWallet.walletId, payerNewBalance, onSuccess = {
+                                repository.updateWalletBalance(requestorWallet.walletId, requestorNewBalance, onSuccess = {
+
+                                    // Create payer's transaction (expense)
+                                    createTransaction(
+                                        walletId = payerWallet.walletId,
+                                        amount = amount,
+                                        type = "Expense",
+                                        categoryName = "Penny Send"
+                                    )
+
+                                    // Create requestor's transaction (income)
+                                    createTransaction(
+                                        walletId = requestorWallet.walletId,
+                                        amount = amount,
+                                        type = "Income",
+                                        categoryName = "Penny Receive"
+                                    )
+
+                                    // Log the request as accepted
+                                    logRequest(request, "Accepted")
+
+                                    // Update SharedViewModel with the payer's new balance
+                                    sharedViewModel.updateWalletBalance(payerNewBalance)
+
+                                    Toast.makeText(requireContext(), "Transaction completed successfully!", Toast.LENGTH_SHORT).show()
+                                }, onFailure = {
+                                    Toast.makeText(requireContext(), "Failed to update requestor's wallet balance", Toast.LENGTH_SHORT).show()
+                                })
+                            }, onFailure = {
+                                Toast.makeText(requireContext(), "Failed to update payer's wallet balance", Toast.LENGTH_SHORT).show()
+                            })
+                        }, onFailure = {
+                            Toast.makeText(requireContext(), "Failed to fetch requestor's wallet", Toast.LENGTH_SHORT).show()
+                        })
+                    } else {
+                        Toast.makeText(requireContext(), "Insufficient balance", Toast.LENGTH_SHORT).show()
+                    }
+                }, onFailure = {
+                    Toast.makeText(requireContext(), "Failed to fetch payer's wallet", Toast.LENGTH_SHORT).show()
+                })
+            }
+        } else {
+            // Log the request as declined
+            logRequest(request, "Declined")
+        }
+
+        // Remove the request from pendingRequests
+        FirebaseFirestore.getInstance().collection("pendingRequests")
+            .document(requestId)
+            .delete()
+    }
+
+
+
+    private fun createTransaction(walletId: String, amount: Double, type: String, categoryName: String) {
+         val repository = PennyWiseRepository.getInstance(requireContext())
+
+        val categoryId = predefinedCategories.firstOrNull { it.name == categoryName }?.id ?: return
+
+        val transaction = Transaction(
+            id = UUID.randomUUID().toString(),
+            walletId = walletId,
+            amount = amount,
+            type = type,
+            categoryId = categoryId,
+            date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()),
+            description = if (type == "Expense") "Sent money" else "Received money"
+        )
+
+        repository.addTransaction(transaction, onSuccess = {
+            if (type == "Expense") {
+                // Dynamically add the transaction to SharedViewModel
+                sharedViewModel.addTransaction(transaction)
+            }
+        }, onFailure = { exception ->
+            Log.e("Transaction", "Failed to create transaction: ${exception.message}")
+        })
+    }
+
+    // without transactions
+    private fun processRequest1(request: Map<String, Any>, accepted: Boolean) {
+        val repository = PennyWiseRepository.getInstance(requireContext())
+        val requestId = request["requestId"] as String
+        val amount = request["amount"] as Double
+        val requestorEmail = request["requestorEmail"] as String
+        println("requestor email in the processRequest = $requestorEmail")
+
+        if (accepted) {
+            val payerEmail = FirebaseAuth.getInstance().currentUser?.email
+            if (payerEmail != null) {
+                repository.getUserWalletByEmail(payerEmail, onSuccess = { payerWallet ->
+
+                    if (payerWallet.balance >= amount) {
+                        val payernewBalance =  payerWallet.balance - amount //////////????????????
+
+
+                        repository.updateWalletBalance(payerWallet.walletId, payerWallet.balance - amount, onSuccess = {
+                            repository.getUserWalletByEmail(requestorEmail, onSuccess = { requestorWallet ->
+                                repository.updateWalletBalance(requestorWallet.walletId, requestorWallet.balance + amount, onSuccess = {
+                                    logRequest(request, "Accepted")
+                                    sharedViewModel.updateWalletBalance(payernewBalance)
+                                }, onFailure = {
+                                    Toast.makeText(requireContext(), "Failed to update requestor's wallet", Toast.LENGTH_SHORT).show()
+                                })
+                            }, onFailure = {
+                                Toast.makeText(requireContext(), "Failed to fetch requestor's wallet", Toast.LENGTH_SHORT).show()
+                            })
+                        }, onFailure = {
+                            Toast.makeText(requireContext(), "Failed to update payer's wallet", Toast.LENGTH_SHORT).show()
+                        })
+                    } else {
+                        Toast.makeText(requireContext(), "Insufficient balance", Toast.LENGTH_SHORT).show()
+                    }
+                }, onFailure = {
+                    Toast.makeText(requireContext(), "Failed to fetch payer's wallet", Toast.LENGTH_SHORT).show()
+                })
+            }
+        } else {
+            logRequest(request, "Declined")
+        }
+
+        // Remove from pendingRequests
+        FirebaseFirestore.getInstance().collection("pendingRequests")
+            .document(requestId)
+            .delete()
+    }
+
+    private fun logRequest(request: Map<String, Any>, status: String) {
+        val requestId = request["requestId"] as String
+        val logEntry = request + ("status" to status)
+
+        FirebaseFirestore.getInstance().collection("requestLogs")
+            .document(requestId)
+            .set(logEntry)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Request processed successfully!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to log request", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+
+
+
 
     private fun showDatePicker(onDateSelected: (Calendar) -> Unit) {
         val calendar = Calendar.getInstance()
@@ -484,6 +699,14 @@ class HomeFragment : Fragment() {
             calendar.get(Calendar.DAY_OF_MONTH)
         ).show()
     }
+
+
+
+
+
+
+
+
 
 
 
