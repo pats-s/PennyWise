@@ -4,6 +4,7 @@ PennyWise is a comprehensive personal finance management application that empowe
 1) Features
 
 1.1) Authentication
+
   Sign In: Secure login with email and password.
   Register with Email and Password: Register using Firebase Authentication.
   Email Verification: Verify your email address upon sign-up to enhance security.
@@ -11,6 +12,7 @@ PennyWise is a comprehensive personal finance management application that empowe
   Google Sign-In: Quickly register or log in using your Google account.
   
 1.2) Home Page (HomeFragment)
+
   View Wallet Balance: Get an overview of your current wallet balance.
   Add a Transaction: Record income or expense transactions effortlessly.
   Add a Saving Goal: Set financial goals and track progress toward achieving them.  
@@ -21,15 +23,18 @@ PennyWise is a comprehensive personal finance management application that empowe
 1.3) Send & Request Money: Use the floating action button to send or request money from other users.
 
 1.4) Navigation Bar:
+
   Homepage: View and manage transactions, saving goals, and exchange rates.
   Profile Management: Update and view personal information.
   Insights: Visualize income, expenses, and financial goals.
   Bill Management: Automate and track subscriptions and bills.
   
 1.5) Profile Management
+
   Update your profile details, including firstname, lastname and change your password.
   
 1.6) Insights Page
+
   Financial Overview:
   View total income and expenses.
   Financial Health Score: Understand your spending habits and financial status.
@@ -38,11 +43,13 @@ PennyWise is a comprehensive personal finance management application that empowe
   Visualize progress for each saving goal using progress bars.
 
 1.7) Bill Management
+
   Schedule Bills & Subscriptions:
   Automate payments on scheduled dates if the balance is sufficient.
   Pay manually later if the balance is insufficient.
 
 2) Instructions
+   
 Getting Started:
 
 Clone the repository.
@@ -68,7 +75,4 @@ Networking: Retrofit for API calls
 UI: ConstraintLayout, RecyclerView, LinearLayout
 Third-Party Libraries: Google Sign-In
 
-Contributions
-We welcome contributions! If you'd like to add features, fix bugs, or improve the app, feel free to fork the repository and submit a pull request.
 
-For any issues or suggestions, please contact the project maintainers or open an issue in the repository
