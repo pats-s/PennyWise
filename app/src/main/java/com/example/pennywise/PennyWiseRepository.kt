@@ -464,6 +464,7 @@ class PennyWiseRepository private constructor(context: Context) {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        println("wallet id of the requestor passed to the repo = $walletId")
         if (walletId.isEmpty()) {
             println("invalid wallet ID")
             println(walletId)
@@ -605,5 +606,84 @@ class PennyWiseRepository private constructor(context: Context) {
             onFailure(exception)
         })
     }
+
+    fun getUserWalletByEmail(
+        email: String,
+        onSuccess: (Wallet) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        // Step 1: Find the user document based on email
+        firestore.collection("users")
+            .whereEqualTo("email", email)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    val user = querySnapshot.documents[0].toObject(User::class.java)
+                    if (user != null) {
+                        // Step 2: Fetch the wallet using the walletId from the user document
+                        firestore.collection("wallets").document(user.walletId)
+                            .get()
+                            .addOnSuccessListener { walletSnapshot ->
+                                if (walletSnapshot.exists()) {
+                                    val wallet = walletSnapshot.toObject(Wallet::class.java)
+                                    if (wallet != null) {
+                                        // Attach the document ID as the walletId
+                                        val walletWithId = wallet.copy(walletId = walletSnapshot.id)
+                                        onSuccess(walletWithId)
+                                    } else {
+                                        onFailure(Exception("Wallet not found"))
+                                    }
+                                } else {
+                                    onFailure(Exception("Wallet document does not exist"))
+                                }
+                            }
+                            .addOnFailureListener { exception ->
+                                onFailure(exception)
+                            }
+                    } else {
+                        onFailure(Exception("User not found"))
+                    }
+                } else {
+                    onFailure(Exception("No user found with email $email"))
+                }
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
+
+
+    fun getUserWalletByEmail1(
+        email: String,
+        onSuccess: (Wallet) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        // Step 1: Find the user document based on email
+        firestore.collection("users")
+            .whereEqualTo("email", email)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    val user = querySnapshot.documents[0].toObject(User::class.java)
+                    if (user != null) {
+                        println("email found in getUserWalletByEmail is " + user.email)
+                        println("wallet id of " + user.email + " = " + user.walletId)
+
+
+                        // Step 2: Fetch the wallet using the walletId from the user document
+                        getWallet(user.walletId, onSuccess, onFailure)
+                    } else {
+                        onFailure(Exception("User not found"))
+                    }
+                } else {
+                    onFailure(Exception("No user found with email $email"))
+                }
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
 
 }

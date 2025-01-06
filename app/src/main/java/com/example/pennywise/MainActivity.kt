@@ -96,6 +96,7 @@ class MainActivity : AppCompatActivity() {
                 sendMoney(amount, email)
             } else {
                 // Placeholder for receive money functionality
+                requestMoney(amount, email)
                 Toast.makeText(this, "Receive Money is not implemented yet", Toast.LENGTH_SHORT).show()
             }
             dialog.dismiss()
@@ -257,6 +258,37 @@ class MainActivity : AppCompatActivity() {
             Log.e("Transaction", "Failed to create transaction: ${exception.message}")
         })
     }
+
+
+
+    private fun requestMoney(amount: Double, payerEmail: String) {
+        val requestorEmail = FirebaseAuth.getInstance().currentUser?.email
+
+        if (requestorEmail.isNullOrEmpty()) {
+            Toast.makeText(this, "Failed to get user email", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val requestId = UUID.randomUUID().toString()
+        val request = mapOf(
+            "requestId" to requestId,
+            "requestorEmail" to requestorEmail,
+            "payerEmail" to payerEmail,
+            "amount" to amount,
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        FirebaseFirestore.getInstance().collection("pendingRequests")
+            .document(requestId)
+            .set(request)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Request sent successfully!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Failed to send request: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
 
 }
