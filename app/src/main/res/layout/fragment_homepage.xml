@@ -224,19 +224,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
-        <Button
-            android:id="@+id/btnGoToProfile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Go to Profile"
-            android:backgroundTint="@color/primaryLight"
-            android:textColor="@color/white"
-            app:layout_constraintTop_toBottomOf="@id/cardExchangeRates"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

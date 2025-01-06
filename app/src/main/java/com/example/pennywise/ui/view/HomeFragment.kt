@@ -140,10 +140,10 @@ class HomeFragment : Fragment() {
             binding.tvEurToLbp.text = "EUR to LBP: ${eurToLbp.format()}"
         }
 
-        binding.btnGoToProfile.setOnClickListener{
+       /* binding.btnGoToProfile.setOnClickListener{
             val intent = Intent(requireContext(), ProfileActivity::class.java)
             startActivity(intent)
-        }
+        }*/
 
 
     }
