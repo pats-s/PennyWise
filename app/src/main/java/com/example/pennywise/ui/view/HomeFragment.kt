@@ -95,10 +95,11 @@ class HomeFragment : Fragment() {
 
 
         homePageViewModel.fetchCategoriesForMapping()
-        // Initialize the RecyclerView
+
+
         setupRecyclerView()
 
-        // Observe LiveData for welcome message, wallet balance, and transactions
+
         fetchAndSetWelcomeMessage()
 
         observeViewModel()
@@ -107,7 +108,7 @@ class HomeFragment : Fragment() {
             binding.tvTotalBalance.text = "$${String.format("%.2f", balance)}"
         }
 
-        // Add click listener for Add Transaction button
+
         binding.btnAddTransaction.setOnClickListener {
             showAddTransactionDialog()
         }
@@ -118,8 +119,9 @@ class HomeFragment : Fragment() {
 
 
         //homePageViewModel.fetchTodayTransactions()
-        homePageViewModel.fetchTodayUserTransactions()
-        // Add click listener for View All button
+        homePageViewModel.fetchTodayUserTransactions() // for a single user
+
+
         binding.btnViewAll.setOnClickListener {
             navigateToPastTransactions()
         }
@@ -127,7 +129,7 @@ class HomeFragment : Fragment() {
         homePageViewModel.fetchExchangeRates()
         fun Double.format(): String = String.format(Locale.getDefault(), "%.2f", this)
 
-        // Observe exchange rates and update UI
+
         homePageViewModel.exchangeRates.observe(viewLifecycleOwner) { rates ->
             val usdToLbp = rates["LBP"] ?: 0.0
             val usdToEur = rates["EUR"] ?: 0.0
@@ -218,7 +220,7 @@ class HomeFragment : Fragment() {
 
     private fun observeViewModel() {
 
-        // Observe today's transactions from HomePageViewModel
+
         homePageViewModel.todayTransactions.observe(viewLifecycleOwner) { transactions ->
             val categoriesMap = homePageViewModel.categories.value?.associateBy { it.id }.orEmpty()
             transactionAdapter.updateTransactions(transactions, categoriesMap)
@@ -227,7 +229,7 @@ class HomeFragment : Fragment() {
             sharedViewModel.updateTransactions(transactions)
         }
 
-        // Observe dynamically added transactions from SharedViewModel
+
         sharedViewModel.transactions.observe(viewLifecycleOwner) { transactions ->
             val categoriesMap = homePageViewModel.categories.value?.associateBy { it.id }.orEmpty()
             transactionAdapter.updateTransactions(transactions, categoriesMap)
@@ -291,7 +293,6 @@ class HomeFragment : Fragment() {
             categorySpinner.adapter = adapter
         }
 
-        // Set up date picker
         datePicker.setOnClickListener {
             val calendar = Calendar.getInstance()
             val datePickerDialog = DatePickerDialog(
@@ -404,7 +405,6 @@ class HomeFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // Create saving goal
             val savingGoal = SavingGoal(
                 id = UUID.randomUUID().toString(),
                 title = title,
@@ -457,13 +457,11 @@ class HomeFragment : Fragment() {
                 val newSavedAmount = savingGoal.savedAmount + amountToAdd
                 val newWalletBalance = wallet.balance - amountToAdd
 
-                // Update saving goal
                 homePageViewModel.updateSavingGoal(savingGoal.copy(savedAmount = newSavedAmount))
 
-                // Update wallet balance
                 homePageViewModel.updateWalletBalance(savingGoal.walletId, newWalletBalance)
 
-                // Refresh the UI
+                // to refresh the UI
                 if (newSavedAmount >= savingGoal.targetAmount) {
                     homePageViewModel.fetchSavingGoals(savingGoal.walletId)
                 }
@@ -500,7 +498,7 @@ class HomeFragment : Fragment() {
             }
     }
     private fun showPendingRequestsDialog(requests: List<Map<String, Any>>) {
-        val request = requests.first() // Show one request at a time for simplicity
+        val request = requests.first() // to show one request at a time
         val requestorEmail = request["requestorEmail"] as String
         println("requestor email in the showPendingRequestDialog = $requestorEmail")
         val amount = request["amount"] as Double
@@ -514,7 +512,7 @@ class HomeFragment : Fragment() {
             .setNegativeButton("Decline") { _, _ ->
                 processRequest(request, accepted = false)
             }
-            .setCancelable(false) // Ensure the user makes a choice
+            .setCancelable(false) // in order to make the user chose at least one choice
             .show()
     }
 
@@ -539,7 +537,6 @@ class HomeFragment : Fragment() {
                             repository.updateWalletBalance(payerWallet.walletId, payerNewBalance, onSuccess = {
                                 repository.updateWalletBalance(requestorWallet.walletId, requestorNewBalance, onSuccess = {
 
-                                    // Create payer's transaction (expense)
                                     createTransaction(
                                         walletId = payerWallet.walletId,
                                         amount = amount,
@@ -547,7 +544,6 @@ class HomeFragment : Fragment() {
                                         categoryName = "Penny Send"
                                     )
 
-                                    // Create requestor's transaction (income)
                                     createTransaction(
                                         walletId = requestorWallet.walletId,
                                         amount = amount,
@@ -555,10 +551,8 @@ class HomeFragment : Fragment() {
                                         categoryName = "Penny Receive"
                                     )
 
-                                    // Log the request as accepted
                                     logRequest(request, "Accepted")
 
-                                    // Update SharedViewModel with the payer's new balance
                                     sharedViewModel.updateWalletBalance(payerNewBalance)
 
                                     Toast.makeText(requireContext(), "Transaction completed successfully!", Toast.LENGTH_SHORT).show()
@@ -579,11 +573,9 @@ class HomeFragment : Fragment() {
                 })
             }
         } else {
-            // Log the request as declined
             logRequest(request, "Declined")
         }
 
-        // Remove the request from pendingRequests
         FirebaseFirestore.getInstance().collection("pendingRequests")
             .document(requestId)
             .delete()
@@ -608,7 +600,6 @@ class HomeFragment : Fragment() {
 
         repository.addTransaction(transaction, onSuccess = {
             if (type == "Expense") {
-                // Dynamically add the transaction to SharedViewModel
                 sharedViewModel.addTransaction(transaction)
             }
         }, onFailure = { exception ->
@@ -658,7 +649,6 @@ class HomeFragment : Fragment() {
             logRequest(request, "Declined")
         }
 
-        // Remove from pendingRequests
         FirebaseFirestore.getInstance().collection("pendingRequests")
             .document(requestId)
             .delete()

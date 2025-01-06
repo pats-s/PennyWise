@@ -21,12 +21,13 @@ class ProfileAdapter(
 
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
+    //a companion object is defined in kotlin to use it as a static object
     companion object {
         private const val TYPE_TEXT = 0
         private const val TYPE_IMAGE = 1
         private const val TYPE_PASSWORD = 2
-        private const val TYPE_DOB = 3 // New type for DOB
-        private const val TYPE_NAME = 4 // New type for Name
+        private const val TYPE_DOB = 3
+        private const val TYPE_NAME = 4
 
 
     }
@@ -50,8 +51,8 @@ class ProfileAdapter(
             TYPE_TEXT -> TextViewHolder(inflater.inflate(R.layout.item_text_field, parent, false))
             TYPE_IMAGE -> ImageViewHolder(inflater.inflate(R.layout.item_image_field, parent, false))
             TYPE_PASSWORD -> PasswordViewHolder(inflater.inflate(R.layout.item_password_field, parent, false))
-            TYPE_DOB -> DOBViewHolder(inflater.inflate(R.layout.item_dob_field, parent, false)) // Inflate DOB layout
-            TYPE_NAME -> NameViewHolder(inflater.inflate(R.layout.item_name_field, parent, false)) // Inflate name field
+            TYPE_DOB -> DOBViewHolder(inflater.inflate(R.layout.item_dob_field, parent, false))
+            TYPE_NAME -> NameViewHolder(inflater.inflate(R.layout.item_name_field, parent, false))
 
             else -> throw IllegalArgumentException("Invalid view type")
         }
@@ -92,7 +93,7 @@ class ProfileAdapter(
             }
         }
     }
-    // ViewHolder for text fields
+
     class TextViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val label: TextView = itemView.findViewById(R.id.textFieldLabel)
         private val value: TextView = itemView.findViewById(R.id.textFieldValue)
@@ -103,12 +104,11 @@ class ProfileAdapter(
         }
     }
 
-    // ViewHolder for image fields
     class ImageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val image: ImageView = itemView.findViewById(R.id.imageField)
 
         fun bind(field: UserProfileField) {
-            // Handle image loading (use a library like Glide or Picasso for real implementations)
+
         }
     }
 
@@ -135,31 +135,9 @@ class ProfileAdapter(
             }
         }
     }
-//    class DOBViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-//        private val dobLabel: TextView = itemView.findViewById(R.id.textViewLabel)
-//        private val dobValue: EditText = itemView.findViewById(R.id.editTextValue)
-//        private val saveButton: Button = itemView.findViewById(R.id.saveButton)
-//
-//        fun bind(field: UserProfileField, onDOBSave: (String) -> Unit) {
-//            dobLabel.text = field.label
-//            dobValue.setText(field.value)
-//
-//            // Enable editing only if DOB is null
-//            dobValue.isEnabled = field.value == null
-//            saveButton.isEnabled = field.value == null
-//
-//            saveButton.setOnClickListener {
-//                val newDOB = dobValue.text.toString()
-//
-//                if (newDOB.isEmpty()) {
-//                    Toast.makeText(itemView.context, "Please enter a valid DOB", Toast.LENGTH_SHORT).show()
-//                } else {
-//                    onDOBSave(newDOB)
-//                    Toast.makeText(itemView.context, "DOB updated successfully", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        }
-//    }
+
+
+
 class DOBViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val dobLabel: TextView = itemView.findViewById(R.id.textFieldLabel)
     private val dobValue: EditText = itemView.findViewById(R.id.textFieldValue)
@@ -182,10 +160,10 @@ class DOBViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             if (newDOB.isEmpty()) {
                 Toast.makeText(itemView.context, "Please enter a valid DOB", Toast.LENGTH_SHORT).show()
             } else {
-                onDOBSave(newDOB) // Pass the new DOB to the callback
+                onDOBSave(newDOB)
                 Toast.makeText(itemView.context, "DOB updated successfully", Toast.LENGTH_SHORT).show()
 
-                // Disable editing and the save button after saving
+
                 dobValue.isEnabled = false
                 saveButton.isEnabled = false
             }

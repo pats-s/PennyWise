@@ -21,7 +21,7 @@
 
     <item
         android:id="@+id/fragment_bills"
-        android:icon="@drawable/ic_analytics"
+        android:icon="@drawable/ic_bills1"
         android:title="Bills"
         app:showAsAction="ifRoom" />
 </menu>

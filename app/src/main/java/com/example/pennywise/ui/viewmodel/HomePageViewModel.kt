@@ -69,7 +69,7 @@ class HomePageViewModel(private val repository: PennyWiseRepository) : ViewModel
                     val currentBalance = _walletBalance.value
                     if (currentBalance == null || currentBalance != wallet.balance) {
                         _walletBalance.postValue(wallet.balance)
-                        _errorMessage.postValue("Value posted from HPVM: ${wallet.balance}")
+                        //_errorMessage.postValue("Value posted from HPVM: ${wallet.balance}")
                     }
                 }, onFailure = { exception ->
                     _walletBalance.postValue(0.0) // Default balance

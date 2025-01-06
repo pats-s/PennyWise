@@ -57,19 +57,18 @@ class BillsFragment : Fragment() {
 
 
 
-        // Initialize the adapter with the debug log
         billAdapter = BillAdapter(emptyList()) { bill ->
             println("Bill Wallet ID: ${bill.walletId}")
 
-            // Deduct bill amount and update Firestore
+            // Deduct bill amount and update Firestore ( this is for the pay now button)
             viewModel.payBill(bill, onSuccess = {
-                // update the payment date after we pay
+                // we update the payment date after we pay
                 repository.updateBillAfterPayment(bill, onSuccess = {
                     Toast.makeText(binding.root.context, "Bill marked as paid.", Toast.LENGTH_SHORT).show()
                 }, onFailure = { exception ->
                     Toast.makeText(binding.root.context, "Error: ${exception.message}", Toast.LENGTH_SHORT).show()
                 })
-                // Fetch the updated wallet balance only after successful deduction
+
                 repository.getWallet(bill.walletId, onSuccess = { wallet ->
                     sharedViewModel.updateWalletBalance(wallet.balance)
                     println("Updated wallet balance (shared view model): ${wallet.balance}")
@@ -115,7 +114,7 @@ class BillsFragment : Fragment() {
             billAdapter.updateBills(bills)
         }
 
-        // Fetch bills for the logged-in user's wallet
+
         getCurrentWalletId { walletId ->
             if (walletId.isNotEmpty()) {
                 viewModel.fetchBills(walletId)
@@ -162,7 +161,7 @@ class BillsFragment : Fragment() {
                 val amount = billAmountInput.text.toString().toDoubleOrNull() ?: 0.0
                 val date = billDateInput.text.toString()
 
-                // Fetch walletId using the callback
+
                 getCurrentWalletId { walletId ->
                     if (walletId.isNotEmpty()) {
                         val bill = Bill(

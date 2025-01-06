@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
             .setCancelable(true)
             .create()
 
-        // Handle submit button click
+
         btnSubmit.setOnClickListener {
             val amount = etAmount.text.toString().toDoubleOrNull()
             val email = etEmail.text.toString()
@@ -92,12 +92,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             if (rgSendReceive.checkedRadioButtonId == R.id.rb_send) {
-                // Handle send money
                 sendMoney(amount, email)
             } else {
-                // Placeholder for receive money functionality
                 requestMoney(amount, email)
-                Toast.makeText(this, "Receive Money is not implemented yet", Toast.LENGTH_SHORT).show()
             }
             dialog.dismiss()
         }
@@ -118,18 +115,14 @@ class MainActivity : AppCompatActivity() {
 
                     checkIfEmailExists(recipientEmail, onSuccess = { exists ->
                         if (exists) {
-                            // Fetch recipient details
                             fetchRecipientDetailsByEmail(recipientEmail, onSuccess = { recipientUser ->
                                 val recipientWalletId = recipientUser.walletId
 
                                 repository.getWallet(recipientWalletId, onSuccess = { recipientWallet ->
-                                    // Proceed with the transactions
                                     val senderNewBalance = senderWallet.balance - amount
                                     val recipientNewBalance = recipientWallet.balance + amount
 
-                                    // Update sender's wallet balance
                                     repository.updateWalletBalance(senderWalletId, senderNewBalance, onSuccess = {
-                                        // Create sender's transaction
                                         createTransaction(
                                             walletId = senderWalletId,
                                             amount = amount,
@@ -141,9 +134,7 @@ class MainActivity : AppCompatActivity() {
                                         Toast.makeText(this, "Failed to update sender's wallet: ${exception.message}", Toast.LENGTH_SHORT).show()
                                     })
 
-                                    // Update recipient's wallet balance
                                     repository.updateWalletBalance(recipientWalletId, recipientNewBalance, onSuccess = {
-                                        // Create recipient's transaction
                                         createTransaction(
                                             walletId = recipientWalletId,
                                             amount = amount,
@@ -195,21 +186,17 @@ class MainActivity : AppCompatActivity() {
     private fun checkIfEmailExists(email: String, onSuccess: (Boolean) -> Unit, onFailure: (Exception) -> Unit) {
         val firestore = FirebaseFirestore.getInstance()
 
-        // Query the 'users' collection to check if the email exists
         firestore.collection("users")
             .whereEqualTo("email", email)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 if (!querySnapshot.isEmpty) {
-                    // Email exists
                     onSuccess(true)
                 } else {
-                    // Email does not exist
                     onSuccess(false)
                 }
             }
             .addOnFailureListener { exception ->
-                // Handle query failure
                 onFailure(exception)
             }
     }
@@ -251,7 +238,6 @@ class MainActivity : AppCompatActivity() {
 
         repository.addTransaction(transaction, onSuccess = {
             if (type == "Expense") {
-                // Dynamically add the transaction to SharedViewModel
                 sharedViewModel.addTransaction(transaction)
             }
         }, onFailure = { exception ->
