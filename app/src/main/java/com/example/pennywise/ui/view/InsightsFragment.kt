@@ -43,15 +43,16 @@ class InsightsFragment : Fragment() {
         ).get(InsightsViewModel::class.java)
 
         val loggedInUserId =
-            FirebaseAuth.getInstance().currentUser?.uid // Replace with actual user ID logic
+            FirebaseAuth.getInstance().currentUser?.uid
 
         if (loggedInUserId != null) {
             viewModel.calculateFinancialHealthScore(loggedInUserId)
-//            viewModel.fetchTopSpendingCategories(loggedInUserId)
             fetchUserWalletId(loggedInUserId) { walletId ->
                 viewModel.fetchSavingGoals(walletId)
+                viewModel.fetchTopSpendingCategories(walletId)
+
             }
-            setupFilter(loggedInUserId)
+            //setupFilter(loggedInUserId)
         }
 
         viewModel.financialHealthScore.observe(viewLifecycleOwner) { score ->
@@ -74,14 +75,12 @@ class InsightsFragment : Fragment() {
             binding.expenseTextView.text = "Expense: $${String.format("%.2f", expense)}"
         }
 
-        // Observe spending by category and update RecyclerView
         viewModel.spendingByCategory.observe(viewLifecycleOwner) { spendingList ->
             val adapter = CategorySpendingAdapter(spendingList)
             binding.topCategoriesRecyclerView.adapter = adapter
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
-            // Optionally display error message
         }
 
         viewModel.savingGoals.observe(viewLifecycleOwner) { savingGoals ->
@@ -95,7 +94,7 @@ class InsightsFragment : Fragment() {
     }
 
 
-    private fun setupFilter(userId: String) {
+    /*private fun setupFilter(userId: String) {
         binding.filterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 val filterType = parent.getItemAtPosition(position).toString()
@@ -106,7 +105,7 @@ class InsightsFragment : Fragment() {
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
-    }
+    }*/
 
 
     private fun showDatePicker(filterType: String, userId: String) {
@@ -125,7 +124,7 @@ class InsightsFragment : Fragment() {
                     .addOnSuccessListener { document ->
                         val walletId = document.getString("walletId") // Ensure this matches your Firestore schema
                         if (walletId != null) {
-                            viewModel.fetchTopSpendingCategories(walletId, filterType, formattedDate)
+                            //viewModel.fetchTopSpendingCategories(walletId, filterType, formattedDate)
                         }
                     }
 

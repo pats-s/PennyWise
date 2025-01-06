@@ -78,7 +78,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
-                    // User doesn't exist, register them
+                    // User doesn't exist, so we register them
                     val firstname = account.givenName ?: ""
                     val lastname = account.familyName ?: ""
                     val userId = account.id ?: ""
@@ -88,7 +88,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
                     }
                     //saveAdditionalData(userId, firstname, lastname, email, "GoogleAuth", dob)
                 } else {
-                    // User exists, log them in
+                    // if user exists we log them in
                     googleSignInStatus.value = "Welcome back, $email!"
                     authenticateWithFirebase(account, null)
 
@@ -121,16 +121,16 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
         // Create a new wallet
         val walletMap = hashMapOf(
-            "balance" to 0.0, // Initialize with a zero balance
+            "balance" to 0.0,
             "createdAt" to System.currentTimeMillis()
         )
 
         firestore.collection("wallets")
-            .add(walletMap) // Add the wallet document
+            .add(walletMap)
             .addOnSuccessListener { walletDocument ->
                 val walletId = walletDocument.id
 
-                // Add user data to Firestore
+
                 val userMap = hashMapOf(
                     "firstname" to firstname,
                     "lastname" to lastname,
@@ -138,7 +138,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
                     "password" to password,
                     "dob" to dob,
                     "profilePicture" to null,
-                    "walletId" to walletId, // Save the wallet ID
+                    "walletId" to walletId,
                     "lastModified" to System.currentTimeMillis()
                 )
 
