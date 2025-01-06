@@ -4,9 +4,9 @@ data class UserProfileField(
     val label: String,
     var value: String?,
     val fieldType: FieldType,
-    val isPassword: Boolean = false, // Flag to indicate if it's a password field
+    val isPassword: Boolean = false,
     val editable: Boolean = false,
-    val dbFieldName: String // Actual Firestore field name
+    val dbFieldName: String
 
 ) {
     enum class FieldType {
